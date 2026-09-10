@@ -3165,32 +3165,36 @@
                 const startDate = b.date || b.Date || '';
                 const key = [roomName, (startDate || '').split('T')[0], b.startTime || b.StartTime, reqName].join('|');
                 return roomName && startDate && (b.startTime || b.StartTime) && !existingKeys.has(key);
-                }).map(b => ({
-  room: b.room || b.Room || '',
-  building: b.building || b.Building || '',
-  date: b.date || b.Date || '',
-  startTime: b.startTime || b.StartTime || '',
-  endTime: b.endTime || b.EndTime || b.startTime || b.StartTime || '',
-  
-  // บันทึกซ้ำทั้ง requester และ name
-  requester: b.requester || b.Requester || b.booker || b.Booker || b['ชื่อผู้จอง'] || 'ไม่ระบุ',
-  name: b.requester || b.Requester || b.booker || b.Booker || b['ชื่อผู้จอง'] || 'ไม่ระบุ',
-  
-  // บันทึกซ้ำทั้ง purpose และ reason
-  purpose: b.purpose || b.Purpose || b['วัตถุประสงค์'] || '',
-  reason: b.purpose || b.Purpose || b['วัตถุประสงค์'] || '',
-  
-  // บันทึกซ้ำทั้ง userStatus และ status
-  userStatus: b.userStatus || b.UserStatus || b['สถานะผู้ใช้'] || '',
-  status: b.userStatus || b.UserStatus || b['สถานะผู้ใช้'] || '',
-  
-  // บันทึกซ้ำทั้ง department และ faculty
-  department: b.department || b.Department || b['คณะ/หน่วยงาน'] || '',
-  faculty: b.department || b.Department || b['คณะ/หน่วยงาน'] || '',
-  
-  attendees: b.attendees || b.Attendees || b['จำนวนผู้ใช้งาน'] || '',
-  createdAt: b.createdAt || b.Timestamp || new Date().toISOString()
-}));
+                }).map(b => {
+  const reqName = b.requester || b.Requester || b.booker || b.Booker || b.name || b['ชื่อผู้จอง'] || 'ไม่ระบุ';
+  const reqStatus = b.userStatus || b.UserStatus || b.status || b['สถานะผู้ใช้'] || '';
+  const reqDept = b.department || b.Department || b.faculty || b['คณะ/หน่วยงาน'] || '';
+  const reqPurpose = b.purpose || b.Purpose || b.reason || b['วัตถุประสงค์'] || '';
+
+  return {
+    room: b.room || b.Room || '',
+    building: b.building || b.Building || '',
+    date: b.date || b.Date || '',
+    startTime: b.startTime || b.StartTime || '',
+    endTime: b.endTime || b.EndTime || b.startTime || b.StartTime || '',
+
+    // บันทึกซ้ำทั้ง 2 แบบ (ทั้งชื่อสั้นและชื่อเต็ม) เพื่อรองรับทุกฟังก์ชันใน UI
+    requester: reqName,
+    name: reqName,
+
+    userStatus: reqStatus,
+    status: reqStatus,
+
+    department: reqDept,
+    faculty: reqDept,
+
+    purpose: reqPurpose,
+    reason: reqPurpose,
+
+    attendees: b.attendees || b.Attendees || b['จำนวนผู้ใช้งาน'] || '',
+    createdAt: b.createdAt || b.Timestamp || new Date().toISOString()
+  };
+});
 
             Swal.close();
 

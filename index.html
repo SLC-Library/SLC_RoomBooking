@@ -3160,20 +3160,23 @@
             ));
 
             const toImport = legacyBookings.filter(b => {
-                const key = [b.room, (b.date || '').split('T')[0], b.startTime, b.requester || b.booker].join('|');
-                return b.room && b.date && b.startTime && !existingKeys.has(key);
-            }).map(b => ({
-                room: b.room,
-                building: b.building || '',
-                date: b.date,
-                startTime: b.startTime,
-                endTime: b.endTime || b.startTime,
-                requester: b.requester || b.booker || 'ไม่ระบุ',
-                purpose: b.purpose || '',
-                userStatus: b.userStatus || '',
-                department: b.department || '',
-                attendees: b.attendees || '',
-                createdAt: b.createdAt || new Date().toISOString()
+                const reqName = b.requester || b.Requester || b.booker || b.Booker || '';
+                const roomName = b.room || b.Room || '';
+                const startDate = b.date || b.Date || '';
+                const key = [roomName, (startDate || '').split('T')[0], b.startTime || b.StartTime, reqName].join('|');
+                return roomName && startDate && (b.startTime || b.StartTime) && !existingKeys.has(key);
+                }).map(b => ({
+                room: b.room || b.Room || '',
+                building: b.building || b.Building || '',
+                date: b.date || b.Date || '',
+                startTime: b.startTime || b.StartTime || '',
+                endTime: b.endTime || b.EndTime || b.startTime || b.StartTime || '',
+                requester: b.requester || b.Requester || b.booker || b.Booker || b['ชื่อผู้จอง'] || 'ไม่ระบุ',
+                purpose: b.purpose || b.Purpose || b['วัตถุประสงค์'] || '',
+                userStatus: b.userStatus || b.UserStatus || b['สถานะผู้ใช้'] || '',
+                department: b.department || b.Department || b['คณะ/หน่วยงาน'] || '',
+                attendees: b.attendees || b.Attendees || b['จำนวนผู้ใช้งาน'] || '',
+                createdAt: b.createdAt || b.Timestamp || new Date().toISOString()
             }));
 
             Swal.close();

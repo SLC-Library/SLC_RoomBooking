@@ -924,6 +924,7 @@
             onAuthStateChanged: (cb) => onAuthStateChanged(auth, cb),
             getCurrentUser: () => auth.currentUser
         };
+        window.dispatchEvent(new Event('auth-ready'));
 
         // Required connection test
         async function testConnection() {
@@ -1105,12 +1106,134 @@
         });
 
         // สถานะการล็อกอินแอดมิน อ้างอิงจาก Firebase Auth จริง (ไม่ใช่รหัสผ่านที่ฝังในโค้ด)
+        const ADMIN_INACTIVITY_TIMEOUT_MS = 20 * 60 * 1000;
+        const ADMIN_ACTIVITY_THROTTLE_MS = 5 * 1000;
+        const ADMIN_LAST_ACTIVITY_STORAGE_KEY = 'slcAdminLastActivityAt';
         let currentAdminUser = null;
-        if (window.authOps) {
-            window.authOps.onAuthStateChanged((user) => {
-                currentAdminUser = user;
-            });
+        let adminInactivityTimer = null;
+        let adminLastActivityAt = 0;
+        let adminActivityThrottledAt = 0;
+        let adminAuthListenerAttached = false;
+        let adminSessionLocking = false;
+
+        function isAdminViewVisible() {
+            const viewAdmin = document.getElementById('view-admin');
+            return Boolean(viewAdmin && !viewAdmin.classList.contains('hidden'));
         }
+
+        function clearAdminInactivityTimer() {
+            if (adminInactivityTimer) {
+                clearTimeout(adminInactivityTimer);
+                adminInactivityTimer = null;
+            }
+        }
+
+        function readStoredAdminActivity() {
+            try {
+                const timestamp = Number(sessionStorage.getItem(ADMIN_LAST_ACTIVITY_STORAGE_KEY));
+                return Number.isFinite(timestamp) && timestamp > 0 ? timestamp : 0;
+            } catch (err) {
+                console.warn('Unable to read Admin activity timestamp:', err);
+                return 0;
+            }
+        }
+
+        function storeAdminActivity(timestamp) {
+            try {
+                sessionStorage.setItem(ADMIN_LAST_ACTIVITY_STORAGE_KEY, String(timestamp));
+            } catch (err) {
+                console.warn('Unable to store Admin activity timestamp:', err);
+            }
+        }
+
+        function removeStoredAdminActivity() {
+            try {
+                sessionStorage.removeItem(ADMIN_LAST_ACTIVITY_STORAGE_KEY);
+            } catch (err) {
+                console.warn('Unable to clear Admin activity timestamp:', err);
+            }
+        }
+
+        function scheduleAdminInactivityTimer() {
+            if (adminSessionLocking || !isAdminLoggedIn()) return false;
+
+            const elapsed = Date.now() - adminLastActivityAt;
+            const remaining = ADMIN_INACTIVITY_TIMEOUT_MS - elapsed;
+            if (!adminLastActivityAt || remaining <= 0) {
+                endAdminSession(true);
+                return false;
+            }
+
+            clearAdminInactivityTimer();
+            adminInactivityTimer = setTimeout(() => {
+                endAdminSession(true);
+            }, remaining);
+            return true;
+        }
+
+        function resetAdminInactivityTimer() {
+            if (adminSessionLocking || !isAdminLoggedIn()) return false;
+
+            const now = Date.now();
+            if (adminLastActivityAt && now - adminLastActivityAt >= ADMIN_INACTIVITY_TIMEOUT_MS) {
+                endAdminSession(true);
+                return false;
+            }
+
+            adminLastActivityAt = now;
+            storeAdminActivity(adminLastActivityAt);
+            return scheduleAdminInactivityTimer();
+        }
+
+        function handleAdminAuthStateChange(user) {
+            currentAdminUser = user;
+            if (user) {
+                adminLastActivityAt = readStoredAdminActivity();
+                if (!adminLastActivityAt) {
+                    adminLastActivityAt = Date.now();
+                    storeAdminActivity(adminLastActivityAt);
+                }
+                scheduleAdminInactivityTimer();
+                return;
+            }
+
+            adminLastActivityAt = 0;
+            removeStoredAdminActivity();
+            clearAdminInactivityTimer();
+            const wasEndingSession = adminSessionLocking;
+            adminSessionLocking = false;
+            if (isAdminViewVisible()) {
+                switchView('booking');
+                if (!wasEndingSession) {
+                    BrandSwal.fire({
+                        icon: 'info',
+                        title: 'Session Admin หมดอายุ',
+                        text: 'กรุณาเข้าสู่ระบบใหม่เพื่อใช้งาน Admin Control Panel',
+                        confirmButtonColor: '#01224D'
+                    });
+                }
+            }
+        }
+
+        function attachAdminAuthListener() {
+            if (adminAuthListenerAttached || !window.authOps) return;
+            adminAuthListenerAttached = true;
+            window.authOps.onAuthStateChanged(handleAdminAuthStateChange);
+        }
+
+        window.addEventListener('auth-ready', attachAdminAuthListener);
+        attachAdminAuthListener();
+
+        function handleAdminActivity() {
+            const now = Date.now();
+            if (now - adminActivityThrottledAt < ADMIN_ACTIVITY_THROTTLE_MS) return;
+            adminActivityThrottledAt = now;
+            resetAdminInactivityTimer();
+        }
+
+        ['pointerdown', 'keydown', 'scroll', 'touchstart', 'focus'].forEach(eventName => {
+            window.addEventListener(eventName, handleAdminActivity, { passive: true, capture: true });
+        });
 
         function isAdminLoggedIn() {
             return Boolean(currentAdminUser || (window.authOps && window.authOps.getCurrentUser()));
@@ -1119,6 +1242,7 @@
         // แสดงฟอร์มเข้าสู่ระบบด้วยอีเมล/รหัสผ่านของบัญชีแอดมินจริง (Firebase Auth)
         // คืนค่า true เมื่อผู้ใช้ล็อกอินสำเร็จ (หรือล็อกอินอยู่แล้ว), false เมื่อยกเลิก/ผิดพลาด
         async function ensureAdminAuth(promptTitle) {
+            if (adminSessionLocking) return false;
             if (isAdminLoggedIn()) return true;
 
             const result = await BrandSwal.fire({
@@ -1163,6 +1287,7 @@
             });
 
             if (result.isConfirmed) {
+                resetAdminInactivityTimer();
                 BrandSwal.fire({
                     icon: 'success',
                     title: 'เข้าสู่ระบบสำเร็จ',
@@ -1178,6 +1303,7 @@
             if (view === 'admin') {
                 const ok = await ensureAdminAuth();
                 if (!ok) return;
+                if (!resetAdminInactivityTimer()) return;
             }
 
             document.getElementById('view-booking').classList.toggle('hidden', view !== 'booking');
@@ -1201,16 +1327,44 @@
             }
         }
 
-        function logoutAdmin() {
-            if (window.authOps) window.authOps.signOutAdmin().catch(() => {});
+        async function endAdminSession(expired = false) {
+            if (adminSessionLocking) return;
+            adminSessionLocking = true;
+            clearAdminInactivityTimer();
+            adminLastActivityAt = 0;
+            removeStoredAdminActivity();
+            currentAdminUser = null;
+
+            // ซ่อนหน้า Admin ก่อนรอ Firebase sign-out เพื่อไม่ให้ข้อมูลค้างบนหน้าจอ
+            switchView('booking');
+
+            try {
+                if (window.authOps) await window.authOps.signOutAdmin();
+            } catch (err) {
+                console.warn('Admin sign-out warning:', err);
+                BrandSwal.fire({
+                    icon: 'error',
+                    title: 'ออกจากระบบไม่สำเร็จ',
+                    text: 'หน้า Admin ถูกล็อกไว้ กรุณารีเฟรชหน้าเว็บแล้วลองออกจากระบบอีกครั้ง',
+                    confirmButtonColor: '#01224D'
+                });
+                return;
+            }
+            adminSessionLocking = false;
+
             BrandSwal.fire({
                 icon: 'info',
-                title: 'ออกจากระบบแอดมินแล้ว',
-                text: 'ล็อคระบบ Admin Control Panel เรียบร้อยแล้ว',
-                timer: 1400,
-                showConfirmButton: false
+                title: expired ? 'ล็อก Admin อัตโนมัติแล้ว' : 'ออกจากระบบแอดมินแล้ว',
+                text: expired
+                    ? 'ไม่มีการใช้งานเป็นเวลา 20 นาที กรุณาเข้าสู่ระบบใหม่'
+                    : 'ล็อคระบบ Admin Control Panel เรียบร้อยแล้ว',
+                timer: expired ? undefined : 1400,
+                showConfirmButton: expired
             });
-            switchView('booking');
+        }
+
+        function logoutAdmin() {
+            endAdminSession(false);
         }
 
         function toggleSidebar() {
@@ -3154,10 +3308,8 @@
         }
 
         async function importLegacyBookings() {
-            if (!isAdminLoggedIn()) {
-                const ok = await ensureAdminAuth();
-                if (!ok) return;
-            }
+            const ok = await ensureAdminAuth();
+            if (!ok) return;
             if (!SCRIPT_URL) {
                 BrandSwal.fire({ icon: 'info', title: 'ไม่มีข้อมูลเก่าให้นำเข้า', text: 'ไม่พบ Google Sheet เดิมที่เชื่อมไว้' });
                 return;

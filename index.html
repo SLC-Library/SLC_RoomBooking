@@ -2111,7 +2111,10 @@
                         confirmButtonText: 'ตกลง',
                         confirmButtonColor: '#1d4ed8'
                     });
-                    
+
+                    if (typeof payload !== 'undefined') {
+                    triggerEmailNotification(payload);
+                      }
                     // ล้าง localStorage หลังจองสำเร็จ
                     localStorage.removeItem('slc_formState');
 
@@ -3566,6 +3569,23 @@
                 renderDashboardTable();
             }
         };
+
+        async function triggerEmailNotification(bookingData) {
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx2G3RXu2xgPzdqo0ZHwi5-REsR-xfPve9rIIpbxGlKOqUfkp-iaouPMAsCRv1KAR4a/exec";
+
+  // แปลง Object เป็น Query String
+  const params = new URLSearchParams(bookingData).toString();
+
+  try {
+    await fetch(`${WEB_APP_URL}?${params}`, {
+      method: "GET",
+      mode: "no-cors"
+    });
+    console.log("ส่งข้อมูลแจ้งเตือนไปยัง Apps Script เรียบร้อย");
+  } catch (err) {
+    console.error("Error sending email:", err);
+  }
+}
     </script>
 </body>
 </html>

@@ -2,6 +2,14 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // เจ้าหน้าที่ที่ล็อกอินด้วย Firebase Auth และมีเอกสาร UID ของตนอยู่ใน collection "admins"
+    // เท่านั้นที่ถือเป็นแอดมิน (สร้างบัญชีใน Firebase Console > Authentication แล้วเพิ่มเอกสาร
+    // admins/{UID} ด้วยตนเองใน Firestore Console — ไม่ต้องมีเซิร์ฟเวอร์หรือ Cloud Functions)
+    function isAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
     function isValidId(id) {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
@@ -34,23 +42,31 @@ service cloud.firestore {
 
     match /bookings/{bookingId} {
       allow read: if true;
+      // ผู้ใช้ทั่วไปยังจองห้องได้โดยไม่ต้องล็อกอิน (ฟอร์มจองสาธารณะ) แต่ข้อมูลต้องผ่าน isValidBooking
       allow create: if isValidId(bookingId) && isValidBooking(incoming());
-      allow update: if isValidId(bookingId) && isValidBooking(incoming());
-      allow delete: if isValidId(bookingId);
+      // แก้ไข/ลบข้อมูลการจอง (รวมถึงการยกเลิกจากหน้า admin หรือปุ่มลบในตาราง) ต้องเป็นแอดมินเท่านั้น
+      allow update: if isAdmin() && isValidId(bookingId) && isValidBooking(incoming());
+      allow delete: if isAdmin() && isValidId(bookingId);
     }
 
     match /maintenance/{maintenanceId} {
       allow read: if true;
-      allow create: if isValidId(maintenanceId) && isValidMaintenance(incoming());
-      allow update: if isValidId(maintenanceId) && isValidMaintenance(incoming());
-      allow delete: if isValidId(maintenanceId);
+      allow create: if isAdmin() && isValidId(maintenanceId) && isValidMaintenance(incoming());
+      allow update: if isAdmin() && isValidId(maintenanceId) && isValidMaintenance(incoming());
+      allow delete: if isAdmin() && isValidId(maintenanceId);
     }
 
     match /serviceHours/{serviceHourId} {
       allow read: if true;
-      allow create: if isValidId(serviceHourId) && isValidServiceHour(incoming());
-      allow update: if isValidId(serviceHourId) && isValidServiceHour(incoming());
-      allow delete: if isValidId(serviceHourId);
+      allow create: if isAdmin() && isValidId(serviceHourId) && isValidServiceHour(incoming());
+      allow update: if isAdmin() && isValidId(serviceHourId) && isValidServiceHour(incoming());
+      allow delete: if isAdmin() && isValidId(serviceHourId);
+    }
+
+    // เอกสาร allowlist ของแอดมิน — เพิ่ม/ลบด้วยตนเองผ่าน Firestore Console เท่านั้น
+    // ไม่มีใครควรเขียน collection นี้ผ่านแอปได้เลย
+    match /admins/{uid} {
+      allow read, write: if false;
     }
 
     match /test/{testId} {

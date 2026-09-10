@@ -812,6 +812,10 @@
 
                             <div class="flex flex-wrap items-center gap-2">
                                 <input type="text" id="adminBookingSearch" oninput="filterAdminBookings()" placeholder="ค้นหาชื่อผู้จอง, ห้อง, อาคาร..." class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 w-48 sm:w-60">
+                                <button onclick="importLegacyBookings()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer" title="นำเข้าข้อมูลการจองเก่าจาก Google Sheet (ทำครั้งเดียว)">
+                                    <i class="fa-solid fa-file-import"></i>
+                                    <span>นำเข้าข้อมูลเก่า</span>
+                                </button>
                                 <button onclick="promptAdminExportExcel()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer" title="ส่งออกตารางการจองเป็นไฟล์ Excel">
                                     <i class="fa-solid fa-file-excel"></i>
                                     <span>ส่งออก Excel</span>
@@ -877,6 +881,10 @@
             getFirestore, collection, addDoc, getDocs, doc, deleteDoc, 
             onSnapshot, getDocFromServer 
         } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+        import {
+            getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut,
+            setPersistence, browserSessionPersistence
+        } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 
         const firebaseConfig = {
             projectId: "gen-lang-client-0131819608",
@@ -890,6 +898,22 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+
+        // --- Admin authentication (Firebase Auth) ---
+        // แทนที่ระบบรหัสผ่านแบบฝังในโค้ด (client-side) ด้วยบัญชีผู้ใช้จริงผ่าน Firebase Auth
+        // บัญชีแอดมินต้องถูกสร้างไว้ล่วงหน้าใน Firebase Console > Authentication
+        // และต้องมีเอกสารของ UID นั้นอยู่ใน collection "admins" เพื่อให้ Firestore Rules อนุญาตสิทธิ์เขียนข้อมูล
+        const auth = getAuth(app);
+        setPersistence(auth, browserSessionPersistence).catch((e) => {
+            console.warn("Auth persistence setup warning:", e);
+        });
+
+        window.authOps = {
+            signIn: (email, password) => signInWithEmailAndPassword(auth, email, password),
+            signOutAdmin: () => signOut(auth),
+            onAuthStateChanged: (cb) => onAuthStateChanged(auth, cb),
+            getCurrentUser: () => auth.currentUser
+        };
 
         // Required connection test
         async function testConnection() {
@@ -1070,61 +1094,80 @@
             }
         });
 
-        const ADMIN_PASSCODES = ['Lib@2026', 'slclib', 'slcadmin', 'admin1234'];
-        function isValidAdminPass(p) {
-            return Boolean(p && ADMIN_PASSCODES.includes(p.trim()));
+        // สถานะการล็อกอินแอดมิน อ้างอิงจาก Firebase Auth จริง (ไม่ใช่รหัสผ่านที่ฝังในโค้ด)
+        let currentAdminUser = null;
+        if (window.authOps) {
+            window.authOps.onAuthStateChanged((user) => {
+                currentAdminUser = user;
+            });
+        }
+
+        function isAdminLoggedIn() {
+            return Boolean(currentAdminUser || (window.authOps && window.authOps.getCurrentUser()));
+        }
+
+        // แสดงฟอร์มเข้าสู่ระบบด้วยอีเมล/รหัสผ่านของบัญชีแอดมินจริง (Firebase Auth)
+        // คืนค่า true เมื่อผู้ใช้ล็อกอินสำเร็จ (หรือล็อกอินอยู่แล้ว), false เมื่อยกเลิก/ผิดพลาด
+        async function ensureAdminAuth(promptTitle) {
+            if (isAdminLoggedIn()) return true;
+
+            const result = await BrandSwal.fire({
+                title: promptTitle || '🔒 เข้าสู่ระบบ Admin Control Panel',
+                html: `
+                    <p class="text-xs text-slate-500 mb-3 text-left">เฉพาะเจ้าหน้าที่ห้องสมุด SLC Library เท่านั้น<br>กรุณาเข้าสู่ระบบด้วยบัญชีแอดมิน:</p>
+                    <input type="email" id="swal-admin-email" class="swal2-input" placeholder="อีเมลแอดมิน" autocapitalize="off" autocorrect="off">
+                    <input type="password" id="swal-admin-password" class="swal2-input" placeholder="รหัสผ่าน" autocapitalize="off" autocorrect="off">
+                `,
+                showCancelButton: true,
+                confirmButtonText: '<i class="fa-solid fa-key me-1.5"></i>เข้าสู่ระบบ',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#01224D',
+                focusConfirm: false,
+                showLoaderOnConfirm: true,
+                customClass: {
+                    popup: 'brand-swal-popup',
+                    title: 'brand-swal-title',
+                    htmlContainer: 'brand-swal-html',
+                    confirmButton: 'brand-swal-confirm',
+                    cancelButton: 'brand-swal-cancel',
+                    actions: 'brand-swal-actions'
+                },
+                preConfirm: async () => {
+                    const emailEl = document.getElementById('swal-admin-email');
+                    const pwdEl = document.getElementById('swal-admin-password');
+                    const email = emailEl ? emailEl.value.trim() : '';
+                    const password = pwdEl ? pwdEl.value : '';
+                    if (!email || !password) {
+                        Swal.showValidationMessage('กรุณากรอกอีเมลและรหัสผ่านให้ครบถ้วน');
+                        return false;
+                    }
+                    try {
+                        await window.authOps.signIn(email, password);
+                        return true;
+                    } catch (err) {
+                        Swal.showValidationMessage('เข้าสู่ระบบไม่สำเร็จ: อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+                        return false;
+                    }
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            });
+
+            if (result.isConfirmed) {
+                BrandSwal.fire({
+                    icon: 'success',
+                    title: 'เข้าสู่ระบบสำเร็จ',
+                    timer: 900,
+                    showConfirmButton: false
+                });
+                return true;
+            }
+            return false;
         }
 
         async function switchView(view) {
             if (view === 'admin') {
-                const isAuth = sessionStorage.getItem('slc_admin_auth') === 'true';
-                if (!isAuth) {
-                    const result = await BrandSwal.fire({
-                        title: '🔒 เข้าสู่ระบบ Admin Control Panel',
-                        html: '<p class="text-xs text-slate-500 mb-2">เฉพาะเจ้าหน้าที่ห้องสมุด SLC Library เท่านั้น<br>กรุณากรอกรหัสผ่านแอดมินเพื่อเข้าใช้งาน:</p>',
-                        input: 'password',
-                        inputPlaceholder: 'กรอกรหัสผ่าน...',
-                        inputAttributes: {
-                            autocapitalize: 'off',
-                            autocorrect: 'off'
-                        },
-                        showCancelButton: true,
-                        confirmButtonText: '<i class="fa-solid fa-key me-1.5"></i>เข้าสู่ระบบ',
-                        cancelButtonText: 'ยกเลิก',
-                        confirmButtonColor: '#01224D',
-                        customClass: {
-                            popup: 'brand-swal-popup',
-                            title: 'brand-swal-title',
-                            htmlContainer: 'brand-swal-html',
-                            confirmButton: 'brand-swal-confirm',
-                            cancelButton: 'brand-swal-cancel',
-                            actions: 'brand-swal-actions'
-                        },
-                        preConfirm: (pwd) => {
-                            if (!pwd) {
-                                Swal.showValidationMessage('กรุณากรอกรหัสผ่าน');
-                                return false;
-                            }
-                            if (!isValidAdminPass(pwd)) {
-                                Swal.showValidationMessage('รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง');
-                                return false;
-                            }
-                            return pwd;
-                        }
-                    });
-
-                    if (!result.isConfirmed) {
-                        return;
-                    }
-
-                    sessionStorage.setItem('slc_admin_auth', 'true');
-                    BrandSwal.fire({
-                        icon: 'success',
-                        title: 'เข้าสู่ระบบสำเร็จ',
-                        timer: 900,
-                        showConfirmButton: false
-                    });
-                }
+                const ok = await ensureAdminAuth();
+                if (!ok) return;
             }
 
             document.getElementById('view-booking').classList.toggle('hidden', view !== 'booking');
@@ -1149,7 +1192,7 @@
         }
 
         function logoutAdmin() {
-            sessionStorage.removeItem('slc_admin_auth');
+            if (window.authOps) window.authOps.signOutAdmin().catch(() => {});
             BrandSwal.fire({
                 icon: 'info',
                 title: 'ออกจากระบบแอดมินแล้ว',
@@ -1165,6 +1208,10 @@
         }
 
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzDSTAZ097LZcya3VfwHOigdPEzboHnYYVOMGkpAz-X66UQEfg7BpdkRTWuIf5Wxc9MYw/exec";
+        // Firestore คือฐานข้อมูลหลักแล้ว ไม่ต้องเขียนข้อมูลใหม่ทุกครั้งกลับไปที่ Google Sheet อีกต่อไป
+        // (SCRIPT_URL ยังใช้สำหรับ "นำเข้าข้อมูลเก่า" ครั้งเดียวในหน้า Admin และเป็น fallback อ่านข้อมูลกรณี Firestore ล่ม)
+        // ถ้าต้องการกลับไปซิงก์ข้อมูลใหม่ทุกครั้งไป Google Sheet ด้วย ให้เปลี่ยนเป็น true
+        const SYNC_TO_LEGACY_SHEET = false;
         const rooms = {
             "Saint Louis": [
                 "Conference Room 1",
@@ -1631,48 +1678,9 @@
 
         // ฟังก์ชัน Export ข้อมูลการจองเป็นไฟล์ Excel (.xlsx) เฉพาะแอดมิน (Admin Only)
         async function promptAdminExportExcel() {
-            // ตรวจสอบสิทธิ์แอดมินก่อน
-            const isAuth = sessionStorage.getItem('slc_admin_auth') === 'true';
-            if (!isAuth) {
-                const result = await BrandSwal.fire({
-                    title: '🔒 การส่งออกข้อมูล Excel จำกัดเฉพาะแอดมิน',
-                    html: '<p class="text-xs text-slate-500 mb-2">เพื่อความปลอดภัยของข้อมูลส่วนบุคคลของผู้ใช้งาน<br>กรุณากรอกรหัสผ่านแอดมิน:</p>',
-                    input: 'password',
-                    inputPlaceholder: 'กรอกรหัสผ่าน...',
-                    inputAttributes: {
-                        autocapitalize: 'off',
-                        autocorrect: 'off'
-                    },
-                    showCancelButton: true,
-                    confirmButtonText: '<i class="fa-solid fa-key me-1.5"></i>ยืนยันรหัสผ่าน',
-                    cancelButtonText: 'ยกเลิก',
-                    confirmButtonColor: '#01224D',
-                    customClass: {
-                        popup: 'brand-swal-popup',
-                        title: 'brand-swal-title',
-                        htmlContainer: 'brand-swal-html',
-                        confirmButton: 'brand-swal-confirm',
-                        cancelButton: 'brand-swal-cancel',
-                        actions: 'brand-swal-actions'
-                    },
-                    preConfirm: (pwd) => {
-                        if (!pwd) {
-                            Swal.showValidationMessage('กรุณากรอกรหัสผ่าน');
-                            return false;
-                        }
-                        if (!isValidAdminPass(pwd)) {
-                            Swal.showValidationMessage('รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง');
-                            return false;
-                        }
-                        return pwd;
-                    }
-                });
-
-                if (!result.isConfirmed) {
-                    return;
-                }
-                sessionStorage.setItem('slc_admin_auth', 'true');
-            }
+            // ตรวจสอบสิทธิ์แอดมินก่อน (ผ่าน Firebase Auth จริง)
+            const ok = await ensureAdminAuth('🔒 การส่งออกข้อมูล Excel จำกัดเฉพาะแอดมิน');
+            if (!ok) return;
 
             const totalBookingsCount = allBookings.length;
             const searchInput = document.getElementById("adminBookingSearch");
@@ -2128,7 +2136,7 @@
                     try {
                         await ops.addBooking(payload);
                         handleBookingSuccess();
-                        if (SCRIPT_URL) {
+                        if (SYNC_TO_LEGACY_SHEET && SCRIPT_URL) {
                             fetch(SCRIPT_URL, {
                                 method: "POST",
                                 headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -2466,21 +2474,19 @@
             });
         }
         
-        function deleteBooking(requester, date, startTime, room, docId) {
-            const isAlreadyAdmin = sessionStorage.getItem('slc_admin_auth') === 'true';
-            BrandSwal.fire({
-                title: '🔒 ยืนยันการลบรายการ',
-                html: 'ฟังก์ชันนี้เฉพาะเจ้าหน้าที่ห้องสมุดเท่านั้น<br>กรุณาใส่รหัสผ่านแอดมิน:',
-                input: 'password',
-                inputValue: isAlreadyAdmin ? 'Lib@2026' : '',
-                inputAttributes: {
-                    autocapitalize: 'off',
-                    autocorrect: 'off'
-                },
+        async function deleteBooking(requester, date, startTime, room, docId) {
+            // เฉพาะแอดมินที่ล็อกอินด้วย Firebase Auth เท่านั้นที่ลบรายการจองได้
+            const ok = await ensureAdminAuth('🔒 ยืนยันการลบรายการ (เฉพาะเจ้าหน้าที่ห้องสมุด)');
+            if (!ok) return;
+
+            const confirmResult = await BrandSwal.fire({
+                title: 'ยืนยันการลบรายการ?',
+                text: 'ต้องการลบข้อมูลการจองนี้ใช่หรือไม่',
+                icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: 'ยืนยันการลบ',
                 cancelButtonText: 'ยกเลิก',
-                showLoaderOnConfirm: true,
+                confirmButtonColor: '#dc2626',
                 customClass: {
                     popup: 'brand-swal-popup',
                     title: 'brand-swal-title',
@@ -2488,105 +2494,45 @@
                     confirmButton: 'brand-swal-confirm brand-swal-confirm-danger',
                     cancelButton: 'brand-swal-cancel',
                     actions: 'brand-swal-actions'
-                },
-                preConfirm: async (password) => {
-                    if (!password) {
-                        Swal.showValidationMessage('กรุณากรอกรหัสผ่าน');
-                        return false;
-                    }
-
-                    const isStandardPass = isValidAdminPass(password);
-
-                    let targetDocId = docId;
-                    if (!targetDocId) {
-                        const found = allBookings.find(b => 
-                            b.requester === requester && 
-                            (b.date || '').split('T')[0] === (date || '').split('T')[0] && 
-                            b.startTime === startTime && 
-                            b.room === room
-                        );
-                        if (found && found.id) targetDocId = found.id;
-                    }
-
-                    const ops = await waitForFirestoreOps();
-
-                    // ลบผ่าน Firestore โดยตรงหากเป็นรหัสมาตรฐานแอดมิน
-                    if (isStandardPass) {
-                        if (targetDocId && ops) {
-                            try {
-                                await ops.deleteBooking(targetDocId);
-                                // ลบสำรองใน Google Sheet พื้นหลัง (ถ้ามี)
-                                if (SCRIPT_URL) {
-                                    fetch(SCRIPT_URL, {
-                                        method: 'POST',
-                                        headers: { "Content-Type": "text/plain;charset=utf-8" },
-                                        body: JSON.stringify({ action: 'delete', password, requester, date, startTime, room })
-                                    }).catch(() => {});
-                                }
-                                return { status: "success" };
-                            } catch (err) {
-                                Swal.showValidationMessage(`เกิดข้อผิดพลาดในการลบ: ${err.message || err}`);
-                                return false;
-                            }
-                        } else {
-                            return { status: "success" };
-                        }
-                    }
-
-                    // หากไม่ใช่รหัสมาตรฐาน ลองตรวจสอบผ่าน Google Apps Script (ถ้ามี)
-                    if (SCRIPT_URL) {
-                        try {
-                            const response = await fetch(SCRIPT_URL, {
-                                method: 'POST',
-                                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                                body: JSON.stringify({
-                                    action: 'delete',
-                                    password: password,
-                                    requester: requester,
-                                    date: date,
-                                    startTime: startTime,
-                                    room: room
-                                })
-                            });
-                            if (!response.ok) {
-                                Swal.showValidationMessage('รหัสผ่านแอดมินไม่ถูกต้อง');
-                                return false;
-                            }
-                            const result = await response.json();
-                            if (result.status === "success" && targetDocId && ops) {
-                                ops.deleteBooking(targetDocId).catch(() => {});
-                            }
-                            return result;
-                        } catch (error) {
-                            Swal.showValidationMessage('รหัสผ่านแอดมินไม่ถูกต้อง');
-                            return false;
-                        }
-                    } else {
-                        Swal.showValidationMessage('รหัสผ่านแอดมินไม่ถูกต้อง');
-                        return false;
-                    }
-                },
-                allowOutsideClick: () => !Swal.isLoading()
-            }).then((result) => {
-                if (result.isConfirmed && result.value) {
-                    if (result.value.status === "success") {
-                        BrandSwal.fire({
-                            title: 'ลบรายการสำเร็จ!',
-                            text: 'ลบข้อมูลการจองเรียบร้อยแล้ว',
-                            icon: 'success',
-                            confirmButtonColor: '#1d4ed8'
-                        });
-                        loadBookings(); 
-                    } else {
-                        BrandSwal.fire({
-                            title: 'ไม่สามารถลบได้!',
-                            text: result.value.message || 'รหัสผ่านไม่ถูกต้อง หรือไม่พบข้อมูล',
-                            icon: 'error',
-                            confirmButtonColor: '#1d4ed8'
-                        });
-                    }
                 }
             });
+            if (!confirmResult.isConfirmed) return;
+
+            let targetDocId = docId;
+            if (!targetDocId) {
+                const found = allBookings.find(b =>
+                    b.requester === requester &&
+                    (b.date || '').split('T')[0] === (date || '').split('T')[0] &&
+                    b.startTime === startTime &&
+                    b.room === room
+                );
+                if (found && found.id) targetDocId = found.id;
+            }
+
+            if (!targetDocId) {
+                BrandSwal.fire({ title: 'ไม่พบข้อมูล', text: 'ไม่พบรายการจองที่ต้องการลบ', icon: 'error', confirmButtonColor: '#1d4ed8' });
+                return;
+            }
+
+            try {
+                const ops = await waitForFirestoreOps();
+                if (!ops) throw new Error('Firestore not ready');
+                await ops.deleteBooking(targetDocId);
+                BrandSwal.fire({
+                    title: 'ลบรายการสำเร็จ!',
+                    text: 'ลบข้อมูลการจองเรียบร้อยแล้ว',
+                    icon: 'success',
+                    confirmButtonColor: '#1d4ed8'
+                });
+                loadBookings();
+            } catch (err) {
+                BrandSwal.fire({
+                    title: 'ไม่สามารถลบได้!',
+                    text: err.message || 'เกิดข้อผิดพลาดในการลบข้อมูล',
+                    icon: 'error',
+                    confirmButtonColor: '#1d4ed8'
+                });
+            }
         }
 
         function filterBookings() {
@@ -3171,6 +3117,91 @@
 
             if (refreshBtn) {
                 refreshBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i><span>รีเฟรชข้อมูล</span>';
+            }
+        }
+
+        // นำเข้าข้อมูลการจองเก่าจาก Google Sheet (ระบบเดิมก่อนย้ายมาใช้ Firestore)
+        // ออกแบบให้เรียกซ้ำได้อย่างปลอดภัย: จะข้ามรายการที่มีอยู่ใน Firestore แล้ว (เทียบ ห้อง/วันที่/เวลาเริ่ม/ผู้จอง)
+        async function importLegacyBookings() {
+            if (!isAdminLoggedIn()) {
+                const ok = await ensureAdminAuth();
+                if (!ok) return;
+            }
+            if (!SCRIPT_URL) {
+                BrandSwal.fire({ icon: 'info', title: 'ไม่มีข้อมูลเก่าให้นำเข้า', text: 'ไม่พบ Google Sheet เดิมที่เชื่อมไว้' });
+                return;
+            }
+
+            BrandSwal.fire({ title: 'กำลังตรวจสอบข้อมูลเก่า...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+
+            let legacyBookings = [];
+            try {
+                const res = await fetch(SCRIPT_URL);
+                const data = await res.json();
+                legacyBookings = Array.isArray(data?.bookings) ? data.bookings : (Array.isArray(data) ? data : []);
+            } catch (err) {
+                Swal.close();
+                BrandSwal.fire({ icon: 'error', title: 'ดึงข้อมูลเก่าไม่สำเร็จ', text: err.message || 'ไม่สามารถเชื่อมต่อ Google Sheet ได้' });
+                return;
+            }
+
+            const ops = await waitForFirestoreOps();
+            let currentBookings = allBookings;
+            try {
+                if (ops) currentBookings = await ops.getAllBookings();
+            } catch (e) { /* ใช้ allBookings เดิมถ้าดึงใหม่ไม่สำเร็จ */ }
+
+            const existingKeys = new Set((currentBookings || []).map(b =>
+                [b.room, (b.date || '').split('T')[0], b.startTime, b.requester || b.booker].join('|')
+            ));
+
+            const toImport = legacyBookings.filter(b => {
+                const key = [b.room, (b.date || '').split('T')[0], b.startTime, b.requester || b.booker].join('|');
+                return b.room && b.date && b.startTime && !existingKeys.has(key);
+            }).map(b => ({
+                room: b.room,
+                building: b.building || '',
+                date: b.date,
+                startTime: b.startTime,
+                endTime: b.endTime || b.startTime,
+                requester: b.requester || b.booker || 'ไม่ระบุ',
+                purpose: b.purpose || '',
+                userStatus: b.userStatus || '',
+                department: b.department || '',
+                attendees: b.attendees || '',
+                createdAt: b.createdAt || new Date().toISOString()
+            }));
+
+            Swal.close();
+
+            if (toImport.length === 0) {
+                BrandSwal.fire({ icon: 'info', title: 'ไม่มีข้อมูลใหม่', text: 'ข้อมูลจาก Google Sheet มีอยู่ใน Firestore ครบแล้ว' });
+                return;
+            }
+
+            const confirmResult = await BrandSwal.fire({
+                title: 'ยืนยันการนำเข้าข้อมูลเก่า',
+                html: `พบข้อมูลการจองเก่าที่ยังไม่มีในระบบ <b>${toImport.length}</b> รายการ<br>ต้องการนำเข้าข้อมูลเหล่านี้เข้า Firestore หรือไม่?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'นำเข้าข้อมูล',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#01224D'
+            });
+            if (!confirmResult.isConfirmed) return;
+
+            try {
+                if (!ops) throw new Error('Firestore not ready');
+                await ops.saveBatchBookings(toImport);
+                BrandSwal.fire({
+                    icon: 'success',
+                    title: 'นำเข้าข้อมูลสำเร็จ',
+                    text: `นำเข้าแล้ว ${toImport.length} รายการ`,
+                    confirmButtonColor: '#1d4ed8'
+                });
+                await refreshAdminData();
+            } catch (err) {
+                BrandSwal.fire({ icon: 'error', title: 'นำเข้าข้อมูลไม่สำเร็จ', text: err.message || String(err) });
             }
         }
 

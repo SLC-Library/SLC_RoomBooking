@@ -3166,18 +3166,31 @@
                 const key = [roomName, (startDate || '').split('T')[0], b.startTime || b.StartTime, reqName].join('|');
                 return roomName && startDate && (b.startTime || b.StartTime) && !existingKeys.has(key);
                 }).map(b => ({
-                room: b.room || b.Room || '',
-                building: b.building || b.Building || '',
-                date: b.date || b.Date || '',
-                startTime: b.startTime || b.StartTime || '',
-                endTime: b.endTime || b.EndTime || b.startTime || b.StartTime || '',
-                requester: b.requester || b.Requester || b.booker || b.Booker || b['ชื่อผู้จอง'] || 'ไม่ระบุ',
-                purpose: b.purpose || b.Purpose || b['วัตถุประสงค์'] || '',
-                userStatus: b.userStatus || b.UserStatus || b['สถานะผู้ใช้'] || '',
-                department: b.department || b.Department || b['คณะ/หน่วยงาน'] || '',
-                attendees: b.attendees || b.Attendees || b['จำนวนผู้ใช้งาน'] || '',
-                createdAt: b.createdAt || b.Timestamp || new Date().toISOString()
-            }));
+  room: b.room || b.Room || '',
+  building: b.building || b.Building || '',
+  date: b.date || b.Date || '',
+  startTime: b.startTime || b.StartTime || '',
+  endTime: b.endTime || b.EndTime || b.startTime || b.StartTime || '',
+  
+  // บันทึกซ้ำทั้ง requester และ name
+  requester: b.requester || b.Requester || b.booker || b.Booker || b['ชื่อผู้จอง'] || 'ไม่ระบุ',
+  name: b.requester || b.Requester || b.booker || b.Booker || b['ชื่อผู้จอง'] || 'ไม่ระบุ',
+  
+  // บันทึกซ้ำทั้ง purpose และ reason
+  purpose: b.purpose || b.Purpose || b['วัตถุประสงค์'] || '',
+  reason: b.purpose || b.Purpose || b['วัตถุประสงค์'] || '',
+  
+  // บันทึกซ้ำทั้ง userStatus และ status
+  userStatus: b.userStatus || b.UserStatus || b['สถานะผู้ใช้'] || '',
+  status: b.userStatus || b.UserStatus || b['สถานะผู้ใช้'] || '',
+  
+  // บันทึกซ้ำทั้ง department และ faculty
+  department: b.department || b.Department || b['คณะ/หน่วยงาน'] || '',
+  faculty: b.department || b.Department || b['คณะ/หน่วยงาน'] || '',
+  
+  attendees: b.attendees || b.Attendees || b['จำนวนผู้ใช้งาน'] || '',
+  createdAt: b.createdAt || b.Timestamp || new Date().toISOString()
+}));
 
             Swal.close();
 

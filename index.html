@@ -1010,7 +1010,7 @@
                         });
                     }
                 } catch (err) {
-                    console.error("Batch save error:", err);
+                    handleFirestoreError(err, 'create', 'bookings');
                 }
             },
             // Maintenance and closures
@@ -3126,6 +3126,22 @@
 
         // นำเข้าข้อมูลการจองเก่าจาก Google Sheet (ระบบเดิมก่อนย้ายมาใช้ Firestore)
         // ออกแบบให้เรียกซ้ำได้อย่างปลอดภัย: จะข้ามรายการที่มีอยู่ใน Firestore แล้ว (เทียบ ห้อง/วันที่/เวลาเริ่ม/ผู้จอง)
+        function getLegacyRequesterName(booking) {
+            return booking.requester || booking.Requester || booking.booker || booking.Booker ||
+                booking.name || booking['ชื่อผู้จอง'] || 'ไม่ระบุ';
+        }
+
+        function getLegacyBookingKey(booking) {
+            const room = booking.room || booking.Room || '';
+            const date = (booking.date || booking.Date || '').split('T')[0];
+            const startTime = booking.startTime || booking.StartTime || '';
+            if (!room || !date || !startTime) return '';
+
+            return [room, date, startTime, getLegacyRequesterName(booking)]
+                .map(value => String(value).trim().toLocaleLowerCase())
+                .join('|');
+        }
+
         async function importLegacyBookings() {
             if (!isAdminLoggedIn()) {
                 const ok = await ensureAdminAuth();
@@ -3155,46 +3171,47 @@
                 if (ops) currentBookings = await ops.getAllBookings();
             } catch (e) { /* ใช้ allBookings เดิมถ้าดึงใหม่ไม่สำเร็จ */ }
 
-            const existingKeys = new Set((currentBookings || []).map(b =>
-                [b.room, (b.date || '').split('T')[0], b.startTime, b.requester || b.booker].join('|')
-            ));
+            const existingKeys = new Set(
+                (currentBookings || []).map(getLegacyBookingKey).filter(Boolean)
+            );
 
             const toImport = legacyBookings.filter(b => {
-                const reqName = b.requester || b.Requester || b.booker || b.Booker || '';
-                const roomName = b.room || b.Room || '';
-                const startDate = b.date || b.Date || '';
-                const key = [roomName, (startDate || '').split('T')[0], b.startTime || b.StartTime, reqName].join('|');
-                return roomName && startDate && (b.startTime || b.StartTime) && !existingKeys.has(key);
-                }).map(b => {
-  const reqName = b.requester || b.Requester || b.booker || b.Booker || b.name || b['ชื่อผู้จอง'] || 'ไม่ระบุ';
-  const reqStatus = b.userStatus || b.UserStatus || b.status || b['สถานะผู้ใช้'] || '';
-  const reqDept = b.department || b.Department || b.faculty || b['คณะ/หน่วยงาน'] || '';
-  const reqPurpose = b.purpose || b.Purpose || b.reason || b['วัตถุประสงค์'] || '';
+                const key = getLegacyBookingKey(b);
+                if (!key || existingKeys.has(key)) return false;
 
-  return {
-    room: b.room || b.Room || '',
-    building: b.building || b.Building || '',
-    date: b.date || b.Date || '',
-    startTime: b.startTime || b.StartTime || '',
-    endTime: b.endTime || b.EndTime || b.startTime || b.StartTime || '',
+                // เพิ่ม key ทันทีเพื่อกันรายการซ้ำภายในข้อมูล legacy ชุดเดียวกัน
+                existingKeys.add(key);
+                return true;
+            }).map(b => {
+                const reqName = getLegacyRequesterName(b);
+                const reqStatus = b.userStatus || b.UserStatus || b.status || b['สถานะผู้ใช้'] || '';
+                const reqDept = b.department || b.Department || b.faculty || b['คณะ/หน่วยงาน'] || '';
+                const reqPurpose = b.purpose || b.Purpose || b.reason || b['วัตถุประสงค์'] || '';
 
-    // บันทึกซ้ำทั้ง 2 แบบ (ทั้งชื่อสั้นและชื่อเต็ม) เพื่อรองรับทุกฟังก์ชันใน UI
-    requester: reqName,
-    name: reqName,
+                return {
+                    room: b.room || b.Room || '',
+                    building: b.building || b.Building || '',
+                    date: b.date || b.Date || '',
+                    startTime: b.startTime || b.StartTime || '',
+                    endTime: b.endTime || b.EndTime || b.startTime || b.StartTime || '',
 
-    userStatus: reqStatus,
-    status: reqStatus,
+                    // บันทึกซ้ำทั้ง 2 แบบ (ทั้งชื่อสั้นและชื่อเต็ม) เพื่อรองรับทุกฟังก์ชันใน UI
+                    requester: reqName,
+                    name: reqName,
 
-    department: reqDept,
-    faculty: reqDept,
+                    userStatus: reqStatus,
+                    status: reqStatus,
 
-    purpose: reqPurpose,
-    reason: reqPurpose,
+                    department: reqDept,
+                    faculty: reqDept,
 
-    attendees: b.attendees || b.Attendees || b['จำนวนผู้ใช้งาน'] || '',
-    createdAt: b.createdAt || b.Timestamp || new Date().toISOString()
-  };
-});
+                    purpose: reqPurpose,
+                    reason: reqPurpose,
+
+                    attendees: b.attendees || b.Attendees || b['จำนวนผู้ใช้งาน'] || '',
+                    createdAt: b.createdAt || b.Timestamp || new Date().toISOString()
+                };
+            });
 
             Swal.close();
 

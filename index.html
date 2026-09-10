@@ -3485,7 +3485,14 @@
 
             if (search) {
                 list = list.filter(b => {
-                    const str = `${b.name || ''} ${b.faculty || ''} ${b.building || ''} ${b.room || ''} ${b.objective || ''} ${b.date || ''}`.toLowerCase();
+                    const str = [
+                        b.name, b.requester, b.booker,
+                        b.userStatus, b.status,
+                        b.faculty, b.department,
+                        b.building, b.room,
+                        b.objective, b.purpose, b.reason,
+                        b.date
+                    ].filter(Boolean).join(' ').toLowerCase();
                     return str.includes(search);
                 });
             }
@@ -3517,6 +3524,10 @@
                 const timeDisplay = `${b.startTime || '-'} - ${b.endTime || '-'}`;
                 const buildingName = b.building || '-';
                 const roomName = b.room || '-';
+                const requesterName = b.name || b.requester || b.booker || '-';
+                const userStatus = b.userStatus || b.status || '-';
+                const department = b.faculty || b.department || '-';
+                const purpose = b.objective || b.purpose || b.reason || '-';
 
                 html += `
                     <tr class="hover:bg-slate-50 transition">
@@ -3529,16 +3540,16 @@
                             <div class="text-[11px] text-slate-500">${escapeHtml(buildingName)}</div>
                         </td>
                         <td class="py-3 px-3">
-                            <div class="font-bold text-slate-800">${escapeHtml(b.name || '-')}</div>
-                            <div class="text-[11px] text-slate-500">${escapeHtml(b.email || b.phone || '-')}</div>
+                            <div class="font-bold text-slate-800">${escapeHtml(requesterName)}</div>
+                            <div class="text-[11px] text-slate-500">${escapeHtml(userStatus)}</div>
                         </td>
                         <td class="py-3 px-3">
                             <span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-700">
-                                ${escapeHtml(b.faculty || '-')}
+                                ${escapeHtml(department)}
                             </span>
                         </td>
-                        <td class="py-3 px-3 max-w-[180px] truncate" title="${escapeHtml(b.objective || '-')}">
-                            ${escapeHtml(b.objective || '-')}
+                        <td class="py-3 px-3 max-w-[180px] truncate" title="${escapeHtml(purpose)}">
+                            ${escapeHtml(purpose)}
                         </td>
                         <td class="py-3 px-3 text-center font-bold text-slate-700">
                             ${escapeHtml(String(b.attendees || '1'))} คน

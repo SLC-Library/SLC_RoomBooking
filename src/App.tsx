@@ -2,7 +2,7 @@ import React from 'react';
 
 // ฟังก์ชันส่งอีเมลแจ้งเตือนไปยัง Apps Script (ใช้แบบ GET Parameters)
 const triggerEmailNotification = async (bookingData: any) => {
-  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzbfQ5UuP1hKHpwtGSUrvWArvkFY4tgoHVCBaoFZr5EAEtolbejhLz2CYQuBjodSRug/exec";
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx2G3RXu2xgPzdqo0ZHwi5-REsR-xfPve9rIIpbxGlKOqUfkp-iaouPMAsCRv1KAR4a/exec";
 
   // แปลง Object ข้อมูลการจองเป็น Query Parameters
   const params = new URLSearchParams(bookingData).toString();

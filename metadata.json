@@ -1,0 +1,6 @@
+{
+  "name": "SLC Library Room Booking",
+  "description": "ระบบจองห้องประชุม SLC Library วิทยาลัยเซนต์หลุยส์ ตรวจสอบตารางการจองและสถิติแบบเรียลไทม์",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

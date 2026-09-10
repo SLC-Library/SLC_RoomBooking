@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function isValidBooking(data) {
+      return data.room is string && data.room.size() > 0 && data.room.size() <= 100
+        && data.date is string && data.date.size() >= 10
+        && data.startTime is string && data.startTime.size() >= 4
+        && data.endTime is string && data.endTime.size() >= 4
+        && ((('requester' in data) && data.requester is string && data.requester.size() > 0) || (('booker' in data) && data.booker is string && data.booker.size() > 0));
+    }
+
+    function isValidMaintenance(data) {
+      return (('room' in data) ? (data.room is string && data.room.size() <= 100) : true)
+        && (('building' in data) ? (data.building is string && data.building.size() <= 100) : true)
+        && (('startDate' in data) ? (data.startDate is string && data.startDate.size() >= 10) : (('date' in data) && data.date is string && data.date.size() >= 10))
+        && (('start' in data) ? (data.start is string) : (('startTime' in data) ? (data.startTime is string) : true))
+        && (('end' in data) ? (data.end is string) : (('endTime' in data) ? (data.endTime is string) : true));
+    }
+
+    function isValidServiceHour(data) {
+      return data.day is string && data.day.size() > 0 && data.day.size() <= 50
+        && data.openTime is string && data.openTime.matches('^[0-9]{2}:[0-9]{2}$')
+        && data.closeTime is string && data.closeTime.matches('^[0-9]{2}:[0-9]{2}$');
+    }
+
+    match /bookings/{bookingId} {
+      allow read: if true;
+      allow create: if isValidId(bookingId) && isValidBooking(incoming());
+      allow update: if isValidId(bookingId) && isValidBooking(incoming());
+      allow delete: if isValidId(bookingId);
+    }
+
+    match /maintenance/{maintenanceId} {
+      allow read: if true;
+      allow create: if isValidId(maintenanceId) && isValidMaintenance(incoming());
+      allow update: if isValidId(maintenanceId) && isValidMaintenance(incoming());
+      allow delete: if isValidId(maintenanceId);
+    }
+
+    match /serviceHours/{serviceHourId} {
+      allow read: if true;
+      allow create: if isValidId(serviceHourId) && isValidServiceHour(incoming());
+      allow update: if isValidId(serviceHourId) && isValidServiceHour(incoming());
+      allow delete: if isValidId(serviceHourId);
+    }
+
+    match /test/{testId} {
+      allow read: if true;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

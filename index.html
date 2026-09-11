@@ -601,9 +601,15 @@
                         <div class="w-12 h-7 bg-gradient-to-r from-[#5388D8]/30 to-[#F8DD9C]/30 rounded-lg flex items-center justify-center text-[#0D2535]">
                             <i class="fa-solid fa-timeline text-sm"></i>
                         </div>
-                        ตารางสถานะห้องแบบเรียลไทม์ (วันนี้)
+                        <span id="dashboardTimelineTitle">ตารางสถานะห้องแบบเรียลไทม์ (วันนี้)</span>
                     </h3>
                     <div class="flex flex-wrap items-center gap-2">
+                        <div class="flex items-center gap-1.5">
+                            <label for="dashboardDate" class="text-xs font-semibold text-slate-600 whitespace-nowrap">วันที่:</label>
+                            <input type="text" class="w-28 bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-[#5388D8]/30" id="dashboardDate" aria-label="เลือกวันที่ดูสถานะห้อง">
+                            <button type="button" onclick="setDashboardDateToOffset(0)" class="text-xs font-semibold text-[#5388D8] hover:text-[#0D2535] px-2 py-1.5 rounded-md hover:bg-slate-100 transition" title="แสดงสถานะห้องของวันนี้">วันนี้</button>
+                            <button type="button" onclick="setDashboardDateToOffset(1)" class="text-xs font-semibold text-[#5388D8] hover:text-[#0D2535] px-2 py-1.5 rounded-md hover:bg-slate-100 transition" title="แสดงสถานะห้องของพรุ่งนี้">พรุ่งนี้</button>
+                        </div>
                         <div class="flex bg-slate-100 rounded-lg p-1" id="dashBuildingToggle">
                             <button type="button" data-building="Saint Louis" onclick="setDashboardBuilding('Saint Louis')" class="dash-toggle-btn px-3 py-1.5 rounded-md text-xs font-semibold transition">Saint Louis</button>
                             <button type="button" data-building="Saint Benedict" onclick="setDashboardBuilding('Saint Benedict')" class="dash-toggle-btn px-3 py-1.5 rounded-md text-xs font-semibold transition">Saint Benedict</button>
@@ -618,8 +624,9 @@
 
                 <div class="flex flex-wrap items-center gap-4 mb-4 text-xs font-medium text-slate-500">
                     <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-emerald-400 inline-block"></span> ว่าง (Available)</span>
-                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-rose-400 inline-block"></span> กำลังใช้งาน (In Use)</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-rose-400 inline-block"></span> <span id="timelineBookedLegend">กำลังใช้งาน (In Use)</span></span>
                     <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm inline-block" style="background-image: repeating-linear-gradient(45deg,#cbd5e1,#cbd5e1 3px,#f1f5f9 3px,#f1f5f9 6px);"></span> ปิดซ่อมบำรุง (Maintenance)</span>
+                    <span id="dashboardHoursLabel" class="ms-auto text-[#0D2535] font-semibold bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-full"></span>
                 </div>
 
                 <div class="overflow-x-auto pb-2 pt-8 relative" id="timelineWrapper">
@@ -866,6 +873,82 @@
                             </div>
                         </div>
 
+                    </div>
+
+                    <!-- เวลาทำการพิเศษตามช่วงวันที่ เช่น ช่วงปิดภาคเรียน -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <div class="lg:col-span-5 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
+                            <div class="flex items-center gap-2 pb-3 mb-4 border-b border-slate-100">
+                                <span class="w-8 h-8 rounded-lg bg-blue-50 text-[#5388D8] flex items-center justify-center font-bold text-sm">
+                                    <i class="fa-solid fa-clock"></i>
+                                </span>
+                                <div>
+                                    <h3 class="text-base font-bold text-[#0D2535]">กำหนดเวลาทำการพิเศษ</h3>
+                                    <p class="text-xs text-slate-500">ใช้สำหรับช่วงปิดภาคเรียนหรือช่วงที่เวลาเปิดต่างจากปกติ</p>
+                                </div>
+                            </div>
+
+                            <form id="adminServiceHoursForm" onsubmit="handleAdminSubmitServiceHours(event)" class="space-y-4">
+                                <div>
+                                    <label for="adminHoursBuilding" class="block text-xs font-semibold text-slate-600 mb-1">อาคาร <span class="text-red-500">*</span></label>
+                                    <select id="adminHoursBuilding" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                                        <option value="Saint Louis">อาคาร Saint Louis (ฝั่งโรงพยาบาล)</option>
+                                        <option value="Saint Benedict">อาคาร Saint Benedict (ฝั่งอาคารเรียน)</option>
+                                    </select>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label for="adminHoursStartDate" class="block text-xs font-semibold text-slate-600 mb-1">วันที่เริ่มต้น <span class="text-red-500">*</span></label>
+                                        <input type="text" id="adminHoursStartDate" placeholder="เลือกวันที่เริ่ม" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                                    </div>
+                                    <div>
+                                        <label for="adminHoursEndDate" class="block text-xs font-semibold text-slate-600 mb-1">วันที่สิ้นสุด <span class="text-red-500">*</span></label>
+                                        <input type="text" id="adminHoursEndDate" placeholder="เลือกวันที่สิ้นสุด" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label for="adminHoursOpenTime" class="block text-xs font-semibold text-slate-600 mb-1">เวลาเปิด <span class="text-red-500">*</span></label>
+                                        <input type="time" id="adminHoursOpenTime" value="08:00" step="1800" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                                    </div>
+                                    <div>
+                                        <label for="adminHoursCloseTime" class="block text-xs font-semibold text-slate-600 mb-1">เวลาปิด <span class="text-red-500">*</span></label>
+                                        <input type="time" id="adminHoursCloseTime" value="17:00" step="1800" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label for="adminHoursReason" class="block text-xs font-semibold text-slate-600 mb-1">ชื่อช่วงเวลา / หมายเหตุ <span class="text-red-500">*</span></label>
+                                    <input type="text" id="adminHoursReason" value="ช่วงปิดภาคเรียน" maxlength="200" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                                </div>
+
+                                <button type="submit" id="adminHoursSubmitBtn" class="w-full bg-[#5388D8] hover:bg-[#4177c8] text-white font-semibold py-2.5 px-4 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-sm">
+                                    <i class="fa-solid fa-floppy-disk"></i>
+                                    <span>บันทึกเวลาทำการพิเศษ</span>
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="lg:col-span-7 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col">
+                            <div class="flex flex-wrap items-center justify-between gap-3 pb-3 mb-4 border-b border-slate-100">
+                                <div>
+                                    <h3 class="text-base font-bold text-[#0D2535] flex items-center gap-2">
+                                        <i class="fa-solid fa-business-time text-[#5388D8]"></i>
+                                        รายการเวลาทำการพิเศษ
+                                    </h3>
+                                    <p class="text-xs text-slate-500">ระบบจะกลับไปใช้เวลาปกติโดยอัตโนมัติเมื่อพ้นช่วงวันที่</p>
+                                </div>
+                                <span id="adminHoursCountBadge" class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-bold">0 รายการ</span>
+                            </div>
+                            <div id="adminServiceHoursList" class="flex-1 overflow-y-auto space-y-3 max-h-[480px] pr-1">
+                                <div class="text-center py-12 text-slate-400 text-sm">
+                                    <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-[#5388D8]"></i>
+                                    <p>กำลังโหลดเวลาทำการพิเศษ...</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1140,6 +1223,54 @@
                 } catch (err) {
                     handleFirestoreError(err, 'delete', `maintenance/${id}`);
                 }
+            },
+            // Date-range overrides for semester breaks and other special periods
+            startListeningServiceHours: (onUpdate, onError) => {
+                try {
+                    const colRef = collection(db, "serviceHours");
+                    return onSnapshot(colRef, (snapshot) => {
+                        const items = [];
+                        snapshot.forEach((d) => {
+                            items.push({ id: d.id, ...d.data() });
+                        });
+                        if (typeof onUpdate === 'function') onUpdate(items);
+                    }, (err) => {
+                        console.error("Firestore serviceHours onSnapshot error:", err);
+                        handleFirestoreError(err, 'list', 'serviceHours');
+                        if (typeof onError === 'function') onError(err);
+                    });
+                } catch (err) {
+                    console.error("Failed to start listening to serviceHours:", err);
+                }
+            },
+            getAllServiceHours: async () => {
+                try {
+                    const snapshot = await getDocs(collection(db, "serviceHours"));
+                    const list = [];
+                    snapshot.forEach(d => list.push({ id: d.id, ...d.data() }));
+                    return list;
+                } catch (err) {
+                    handleFirestoreError(err, 'get', 'serviceHours');
+                }
+            },
+            addServiceHours: async (payload) => {
+                try {
+                    const docRef = await addDoc(collection(db, "serviceHours"), {
+                        ...payload,
+                        createdAt: new Date().toISOString()
+                    });
+                    return { success: true, id: docRef.id };
+                } catch (err) {
+                    handleFirestoreError(err, 'create', 'serviceHours');
+                }
+            },
+            deleteServiceHours: async (id) => {
+                try {
+                    await deleteDoc(doc(db, "serviceHours", id));
+                    return { success: true };
+                } catch (err) {
+                    handleFirestoreError(err, 'delete', `serviceHours/${id}`);
+                }
             }
         };
 
@@ -1154,6 +1285,19 @@
             });
         } catch (e) {
             console.warn("Auto maintenance listener initial error:", e);
+        }
+
+        try {
+            window.firestoreOps.startListeningServiceHours((items) => {
+                if (Array.isArray(items)) {
+                    window.__firestoreServiceHoursReady = true;
+                    if (typeof window.onFirestoreServiceHoursUpdated === 'function') {
+                        window.onFirestoreServiceHoursUpdated(items);
+                    }
+                }
+            });
+        } catch (e) {
+            console.warn("Auto serviceHours listener initial error:", e);
         }
 
         window.dispatchEvent(new CustomEvent('firestore-ready'));
@@ -1476,7 +1620,7 @@
         }
 
         let allBookings = []; 
-        let fpBookingInstance, fpFilterInstance; 
+        let fpBookingInstance, fpFilterInstance, fpDashboardInstance;
         let maintenanceSlots = [];
         let operatingHoursOverrides = [];
         const ADMIN_BOOKINGS_PER_PAGE = 50;
@@ -1500,11 +1644,11 @@
         } 
 
         function generateTimeOptions(startHour, endHour) {
-            let options = [];
-            for (let h = startHour; h <= endHour; h++) {
-                let hourStr = h.toString().padStart(2, '0');
-                options.push(`${hourStr}:00`);
-                if (h !== endHour) options.push(`${hourStr}:30`);
+            const options = [];
+            const startMinutes = Math.round(startHour * 60);
+            const endMinutes = Math.round(endHour * 60);
+            for (let minutes = startMinutes; minutes <= endMinutes; minutes += 30) {
+                options.push(minutesToTime(minutes));
             }
             return options;
         }
@@ -1623,13 +1767,22 @@
 
         function validateBookingForm() {
             const errors = [];
+            const building = document.getElementById("building").value;
+            const bookingDate = (fpBookingInstance && fpBookingInstance.input) ? fpBookingInstance.input.value : "";
+            const startTime = document.getElementById("startTime").value;
+            const endTime = document.getElementById("endTime").value;
 
-            if (!document.getElementById("building").value) errors.push("กรุณาเลือกอาคาร");
+            if (!building) errors.push("กรุณาเลือกอาคาร");
             if (!document.getElementById("room").value) errors.push("กรุณาเลือกห้องประชุม");
-            if (!(fpBookingInstance && fpBookingInstance.input.value)) errors.push("กรุณาเลือกวันที่");
-            if (!document.getElementById("startTime").value) errors.push("กรุณาเลือกเวลาเริ่มต้น");
-            if (!document.getElementById("endTime").value) errors.push("กรุณาเลือกเวลาสิ้นสุด");
+            if (!bookingDate) errors.push("กรุณาเลือกวันที่");
+            if (!startTime) errors.push("กรุณาเลือกเวลาเริ่มต้น");
+            if (!endTime) errors.push("กรุณาเลือกเวลาสิ้นสุด");
             if (!document.getElementById("requester").value.trim()) errors.push("กรุณากรอกชื่อผู้จอง");
+
+            if (building && bookingDate && startTime && endTime && !isWithinOperatingHours(building, bookingDate, startTime, endTime)) {
+                const hours = getEffectiveOperatingHours(building, bookingDate);
+                errors.push(`ช่วงเวลาที่เลือกอยู่นอกเวลาทำการ (${minutesToTime(hours.start * 60)}–${minutesToTime(hours.end * 60)} น.)`);
+            }
 
             const attendeesVal = parseInt(document.getElementById("attendees").value, 10);
             if (!attendeesVal || attendeesVal < 1 || attendeesVal > 50) {
@@ -1788,6 +1941,16 @@
             if (!timeStr) return 0;
             var parts = timeStr.split(':');
             return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+        }
+
+        function getTodayDateString() {
+            return new Date().toLocaleDateString('sv-SE');
+        }
+
+        function minutesToTime(minutes) {
+            const hour = Math.floor(minutes / 60).toString().padStart(2, '0');
+            const minute = (minutes % 60).toString().padStart(2, '0');
+            return `${hour}:${minute}`;
         }
 
         // Helper กรองข้อมูลการจองตามเงื่อนไข
@@ -2274,6 +2437,17 @@
             const startTimeValue = document.getElementById("startTime").value;
             const endTimeValue = document.getElementById("endTime").value;
 
+            if (!isWithinOperatingHours(buildingValue, bookingDateValue, startTimeValue, endTimeValue)) {
+                const hours = getEffectiveOperatingHours(buildingValue, bookingDateValue);
+                BrandSwal.fire({
+                    title: 'นอกเวลาทำการ',
+                    text: `ช่วงวันที่เลือกเปิดให้จองเวลา ${minutesToTime(hours.start * 60)}–${minutesToTime(hours.end * 60)} น.`,
+                    icon: 'warning',
+                    confirmButtonColor: '#01224D'
+                });
+                return;
+            }
+
             // ตรวจสอบวันปิดทั้งวัน
             if (isDateFullyClosed(bookingDateValue)) {
                 BrandSwal.fire({
@@ -2470,6 +2644,10 @@
                 if (diff <= 0 || diff > 120) isComplete = false;
             }
 
+            if (building && bookingDate && startTime && endTime && !isWithinOperatingHours(building, bookingDate, startTime, endTime)) {
+                isComplete = false;
+            }
+
             // ถ้าวันนั้นปิดทำการทั้งวัน ไม่อนุญาตให้กดปุ่มจอง
             const isClosed = isDateFullyClosed(bookingDate);
             const submitBtn = document.getElementById("submitBtn");
@@ -2479,6 +2657,11 @@
         }
 
         window.onload = function() {
+            const savedDashboardDate = localStorage.getItem('slc_dashboardDate');
+            if (savedDashboardDate && savedDashboardDate >= getTodayDateString()) {
+                dashboardDate = savedDashboardDate;
+            }
+
             // 1. สร้าง Flatpickr ก่อน เพื่อให้พร้อมใช้งาน
             fpBookingInstance = flatpickr("#bookingDate", {
                 dateFormat: "Y-m-d", 
@@ -2506,12 +2689,36 @@
                 }
             });
 
+            fpDashboardInstance = flatpickr("#dashboardDate", {
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d/m/Y",
+                locale: "th",
+                minDate: "today",
+                defaultDate: dashboardDate,
+                allowInput: false,
+                onChange: function(selectedDates, dateStr) {
+                    setDashboardDate(dateStr);
+                }
+            });
+
             // 2. โหลดสถานะที่เคยเก็บไว้ใน localStorage
             loadFormState();
             const savedB = localStorage.getItem('slc_dashboardBuilding');
             if (savedB) dashboardBuilding = savedB;
             const savedP = localStorage.getItem('slc_dashboardPeriod');
             if (savedP) dashboardPeriod = savedP;
+
+            const timelineTable = document.getElementById('timelineTable');
+            timelineTable.addEventListener('click', (event) => {
+                const availableSlot = event.target.closest('button[data-timeline-available]');
+                if (!availableSlot || !timelineTable.contains(availableSlot)) return;
+                startBookingFromTimeline(
+                    availableSlot.dataset.room,
+                    availableSlot.dataset.start,
+                    availableSlot.dataset.end
+                );
+            });
             
             // 3. ผูก event listener สำหรับ input ต่างๆ
             const requiredFields = [
@@ -2588,7 +2795,7 @@
                             maintenanceSlots = data.maintenance;
                             showUpcomingClosuresPopup();
                         }
-                        if (Array.isArray(data.hours)) {
+                        if (Array.isArray(data.hours) && !window.__firestoreServiceHoursReady) {
                             operatingHoursOverrides = data.hours;
                         }
                         // หาก Firestore ยังไม่มีข้อมูลเลย และใน Sheet เก่ามี ให้นำเข้าอัตโนมัติ
@@ -2815,6 +3022,7 @@
         let timeIndicatorInterval = null;
         let dashboardBuilding = "Saint Louis";
         let dashboardPeriod = "all";
+        let dashboardDate = getTodayDateString();
         let chartUserStatusInstance = null;
         let chartFacultyInstance = null;
         let dashboardRunning = false;
@@ -2830,26 +3038,39 @@
 
         operatingHoursOverrides = operatingHoursOverrides || [];
 
+        function getOperatingHoursOverride(building, dateStr) {
+            if (!dateStr) return null;
+            return operatingHoursOverrides.find(o =>
+                o.building === building &&
+                dateStr >= o.startDate && dateStr <= o.endDate &&
+                o.openTime && o.closeTime
+            ) || null;
+        }
+
         function getEffectiveOperatingHours(building, dateStr) {
-            if (dateStr) {
-                const override = operatingHoursOverrides.find(o =>
-                    (!o.building || o.building === building) &&
-                    dateStr >= o.startDate && dateStr <= o.endDate
-                );
-                if (override && override.openTime && override.closeTime) {
-                    const openHour = timeToMinutes(override.openTime) / 60;
-                    const closeHour = timeToMinutes(override.closeTime) / 60;
-                    return { start: openHour, end: closeHour };
-                }
+            const override = getOperatingHoursOverride(building, dateStr);
+            if (override) {
+                const openHour = timeToMinutes(override.openTime) / 60;
+                const closeHour = timeToMinutes(override.closeTime) / 60;
+                return { start: openHour, end: closeHour };
             }
             return roomOperatingHours[building] || { start: 8, end: 20 };
         }
 
+        function isWithinOperatingHours(building, dateStr, startTime, endTime) {
+            if (!building || !dateStr || !startTime || !endTime) return false;
+            const hours = getEffectiveOperatingHours(building, dateStr);
+            const openMinutes = Math.round(hours.start * 60);
+            const closeMinutes = Math.round(hours.end * 60);
+            return timeToMinutes(startTime) >= openMinutes && timeToMinutes(endTime) <= closeMinutes;
+        }
+
         function generateHalfHourSlots(startHour, endHour) {
             const slots = [];
-            for (let h = startHour; h < endHour; h++) {
-                slots.push(`${h.toString().padStart(2, '0')}:00`);
-                slots.push(`${h.toString().padStart(2, '0')}:30`);
+            const startMinutes = Math.round(startHour * 60);
+            const endMinutes = Math.round(endHour * 60);
+            for (let minutes = startMinutes; minutes < endMinutes; minutes += 30) {
+                slots.push(minutesToTime(minutes));
             }
             return slots;
         }
@@ -2870,6 +3091,46 @@
                 btn.classList.toggle('active', btn.dataset.period === p);
             });
             renderTimeline();
+        }
+
+        function setDashboardDate(dateStr) {
+            if (!dateStr) return;
+            dashboardDate = dateStr;
+            localStorage.setItem('slc_dashboardDate', dateStr);
+            renderTimeline();
+        }
+
+        function setDashboardDateToOffset(offset) {
+            const date = new Date();
+            date.setHours(12, 0, 0, 0);
+            date.setDate(date.getDate() + offset);
+            const dateStr = date.toLocaleDateString('sv-SE');
+            if (fpDashboardInstance) {
+                fpDashboardInstance.setDate(dateStr, true);
+            } else {
+                setDashboardDate(dateStr);
+            }
+        }
+
+        async function startBookingFromTimeline(room, startTime, endTime) {
+            const selectedDate = dashboardDate;
+            await switchView('booking');
+
+            const buildingSelect = document.getElementById('building');
+            const roomSelect = document.getElementById('room');
+            const startSelect = document.getElementById('startTime');
+            const endSelect = document.getElementById('endTime');
+
+            buildingSelect.value = dashboardBuilding;
+            updateRoomsAndTimes();
+            if (fpBookingInstance) fpBookingInstance.setDate(selectedDate, false);
+            updateTimeOptions();
+            roomSelect.value = room;
+            startSelect.value = startTime;
+            endSelect.value = endTime;
+            checkFormCompletion();
+            saveFormState();
+            document.getElementById('bookingForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function initDashboard() {
@@ -3042,8 +3303,11 @@
         }
 
         function renderTimeline() {
-            const todayStr = new Date().toLocaleDateString('sv-SE');
-            const hours = getEffectiveOperatingHours(dashboardBuilding, todayStr);
+            const todayStr = getTodayDateString();
+            const selectedDate = dashboardDate || todayStr;
+            const isToday = selectedDate === todayStr;
+            const hours = getEffectiveOperatingHours(dashboardBuilding, selectedDate);
+            const hoursOverride = getOperatingHoursOverride(dashboardBuilding, selectedDate);
             let slots = generateHalfHourSlots(hours.start, hours.end);
             if (dashboardPeriod === 'morning') slots = slots.filter(s => parseInt(s.split(':')[0]) < 12);
             if (dashboardPeriod === 'afternoon') slots = slots.filter(s => parseInt(s.split(':')[0]) >= 12);
@@ -3052,6 +3316,22 @@
             const table = document.getElementById('timelineTable');
             const thead = table.querySelector('thead tr');
             const tbody = table.querySelector('tbody');
+            const title = document.getElementById('dashboardTimelineTitle');
+            const bookedLegend = document.getElementById('timelineBookedLegend');
+            const hoursLabel = document.getElementById('dashboardHoursLabel');
+            if (title) title.textContent = isToday
+                ? 'ตารางสถานะห้องแบบเรียลไทม์ (วันนี้)'
+                : `ตารางสถานะห้อง — ${formatDateThai(selectedDate)}`;
+            if (bookedLegend) bookedLegend.textContent = isToday
+                ? 'กำลังใช้งาน (In Use)'
+                : 'จองแล้ว (Booked)';
+            if (hoursLabel) {
+                const openTime = minutesToTime(Math.round(hours.start * 60));
+                const closeTime = minutesToTime(Math.round(hours.end * 60));
+                hoursLabel.textContent = hoursOverride
+                    ? `เวลาพิเศษ ${openTime}–${closeTime} น. · ${hoursOverride.reason || 'ตามประกาศ'}`
+                    : `เวลาทำการ ${openTime}–${closeTime} น.`;
+            }
 
             const theadParts = ['<th class="text-xs text-slate-400 sticky left-0 bg-white z-10 pr-3 text-left font-bold">ห้อง</th>'];
             slots.forEach(s => {
@@ -3078,14 +3358,14 @@
                     const inMaint = maintenanceSlots.some(m =>
                         (!m.building || m.building === dashboardBuilding) &&
                         (!m.room || m.room === room) &&
-                        todayStr >= m.startDate && todayStr <= m.endDate &&
+                        selectedDate >= m.startDate && selectedDate <= m.endDate &&
                         slotStart < timeToMinutes(m.end) && timeToMinutes(m.start) < slotEnd
                     );
 
                     const booking = !inMaint && allBookings.find(b => {
                         if (b.building !== dashboardBuilding || b.room !== room) return false;
                         const bDateStr = (b.date || '').split('T')[0];
-                        if (bDateStr !== todayStr) return false;
+                        if (bDateStr !== selectedDate) return false;
                         const bStart = timeToMinutes(b.startTime);
                         const bEnd = timeToMinutes(b.endTime);
                         return slotStart < bEnd && bStart < slotEnd;
@@ -3103,7 +3383,12 @@
                         title = `${escapeHtml(room)} • ${s} • ${escapeHtml(booking.requester || 'มีการจอง')}`;
                     }
 
-                    row += `<td class="rounded-sm h-6 ${cellClass}" ${style} title="${title}"></td>`;
+                    if (!inMaint && !booking) {
+                        const endTime = minutesToTime(slotEnd);
+                        row += `<td class="h-6"><button type="button" class="w-full h-6 block rounded-sm ${cellClass} hover:ring-2 hover:ring-[#0D2535]/40 focus:outline-none focus:ring-2 focus:ring-[#0D2535]" data-timeline-available data-room="${escapeHtml(room)}" data-start="${s}" data-end="${endTime}" title="${title} — คลิกเพื่อจอง" aria-label="จอง ${escapeHtml(room)} วันที่ ${formatDateThai(selectedDate)} เวลา ${s} ถึง ${endTime}"></button></td>`;
+                    } else {
+                        row += `<td class="rounded-sm h-6 ${cellClass}" ${style} title="${title}"></td>`;
+                    }
                 });
                 row += '</tr>';
                 rows.push(row);
@@ -3128,7 +3413,11 @@
             }
 
             const now = new Date();
-            const todayStr = now.toLocaleDateString('sv-SE');
+            const todayStr = getTodayDateString();
+            if (dashboardDate !== todayStr) {
+                line.style.display = 'none';
+                return;
+            }
             const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
             if (window.__timelineRenderedFor && window.__timelineRenderedFor !== todayStr) {
@@ -3251,6 +3540,8 @@
            ========================================================= */
         let adminDatePickerStart = null;
         let adminDatePickerEnd = null;
+        let adminHoursDatePickerStart = null;
+        let adminHoursDatePickerEnd = null;
 
         function switchAdminSubTab(tab) {
             const closuresTab = document.getElementById('adminTabContentClosures');
@@ -3264,6 +3555,7 @@
                 if (closuresBtn) closuresBtn.className = "px-5 py-3 text-sm font-semibold border-b-2 border-[#01224D] text-[#01224D] flex items-center gap-2 transition";
                 if (bookingsBtn) bookingsBtn.className = "px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-2 transition";
                 renderAdminMaintenanceList();
+                renderAdminServiceHoursList();
             } else {
                 if (closuresTab) closuresTab.classList.add('hidden');
                 if (bookingsTab) bookingsTab.classList.remove('hidden');
@@ -3321,6 +3613,27 @@
                         defaultDate: new Date()
                     });
                 }
+                if (!adminHoursDatePickerStart) {
+                    adminHoursDatePickerStart = flatpickr("#adminHoursStartDate", {
+                        dateFormat: "Y-m-d",
+                        locale: "th",
+                        minDate: "today",
+                        defaultDate: new Date(),
+                        onChange: function(selectedDates, dateStr) {
+                            if (adminHoursDatePickerEnd) {
+                                adminHoursDatePickerEnd.set('minDate', dateStr);
+                            }
+                        }
+                    });
+                }
+                if (!adminHoursDatePickerEnd) {
+                    adminHoursDatePickerEnd = flatpickr("#adminHoursEndDate", {
+                        dateFormat: "Y-m-d",
+                        locale: "th",
+                        minDate: "today",
+                        defaultDate: new Date()
+                    });
+                }
             }
 
             await refreshAdminData();
@@ -3335,9 +3648,10 @@
             const ops = await waitForFirestoreOps();
             if (ops) {
                 try {
-                    const [maintList, bList] = await Promise.all([
+                    const [maintList, bList, hoursList] = await Promise.all([
                         ops.getAllMaintenance(),
-                        ops.getAllBookings()
+                        ops.getAllBookings(),
+                        ops.getAllServiceHours()
                     ]);
                     if (Array.isArray(maintList)) {
                         maintenanceSlots = maintList;
@@ -3345,12 +3659,16 @@
                     if (Array.isArray(bList)) {
                         allBookings = bList;
                     }
+                    if (Array.isArray(hoursList)) {
+                        operatingHoursOverrides = hoursList;
+                    }
                 } catch (e) {
                     console.warn("Refresh admin data error:", e);
                 }
             }
 
             renderAdminMaintenanceList();
+            renderAdminServiceHoursList();
             renderAdminBookingsTable();
             updateAdminStats();
 
@@ -3573,6 +3891,158 @@
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="fa-solid fa-plus-circle"></i> <span>บันทึกและประกาศวันปิดปรับปรุง</span>';
                 }
+            }
+        }
+
+        async function handleAdminSubmitServiceHours(e) {
+            e.preventDefault();
+            const building = document.getElementById('adminHoursBuilding').value;
+            const startDate = document.getElementById('adminHoursStartDate').value;
+            const endDate = document.getElementById('adminHoursEndDate').value || startDate;
+            const openTime = document.getElementById('adminHoursOpenTime').value;
+            const closeTime = document.getElementById('adminHoursCloseTime').value;
+            const reason = document.getElementById('adminHoursReason').value.trim();
+
+            if (!startDate || !endDate || endDate < startDate) {
+                BrandSwal.fire({ icon: 'warning', title: 'ช่วงวันที่ไม่ถูกต้อง', text: 'กรุณาระบุวันที่เริ่มต้นและสิ้นสุดให้ถูกต้อง' });
+                return;
+            }
+            if (!openTime || !closeTime || timeToMinutes(openTime) >= timeToMinutes(closeTime)) {
+                BrandSwal.fire({ icon: 'warning', title: 'เวลาทำการไม่ถูกต้อง', text: 'เวลาปิดต้องอยู่หลังเวลาเปิด' });
+                return;
+            }
+            if (timeToMinutes(openTime) % 30 !== 0 || timeToMinutes(closeTime) % 30 !== 0) {
+                BrandSwal.fire({ icon: 'warning', title: 'กรุณาเลือกเวลาเต็มหรือครึ่งชั่วโมง', text: 'ตัวอย่างเช่น 08:00, 08:30 หรือ 17:00 น.' });
+                return;
+            }
+            if (!reason) {
+                BrandSwal.fire({ icon: 'warning', title: 'กรุณาระบุชื่อช่วงเวลา', text: 'เช่น ช่วงปิดภาคเรียน' });
+                return;
+            }
+
+            const overlap = operatingHoursOverrides.find(item =>
+                item.building === building &&
+                startDate <= item.endDate && endDate >= item.startDate
+            );
+            if (overlap) {
+                BrandSwal.fire({
+                    icon: 'warning',
+                    title: 'มีเวลาพิเศษซ้อนทับกัน',
+                    text: `${building} มีรายการ ${formatDateThai(overlap.startDate)} ถึง ${formatDateThai(overlap.endDate)} อยู่แล้ว กรุณาลบรายการเดิมหรือเลือกช่วงวันที่ใหม่`
+                });
+                return;
+            }
+
+            const openMinutes = timeToMinutes(openTime);
+            const closeMinutes = timeToMinutes(closeTime);
+            const affectedBookings = allBookings.filter(booking => {
+                const bookingDate = (booking.date || '').split('T')[0];
+                return booking.building === building &&
+                    bookingDate >= startDate && bookingDate <= endDate &&
+                    (timeToMinutes(booking.startTime) < openMinutes || timeToMinutes(booking.endTime) > closeMinutes);
+            });
+            if (affectedBookings.length > 0) {
+                const confirmation = await BrandSwal.fire({
+                    icon: 'warning',
+                    title: `พบรายการจองนอกเวลาใหม่ ${affectedBookings.length} รายการ`,
+                    text: 'รายการเดิมจะไม่ถูกยกเลิกอัตโนมัติ กรุณาตรวจสอบและติดต่อผู้จองหลังบันทึก',
+                    showCancelButton: true,
+                    confirmButtonText: 'บันทึกต่อ',
+                    cancelButtonText: 'กลับไปตรวจสอบ',
+                    confirmButtonColor: '#5388D8'
+                });
+                if (!confirmation.isConfirmed) return;
+            }
+
+            const submitBtn = document.getElementById('adminHoursSubmitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>กำลังบันทึก...</span>';
+
+            try {
+                const ops = await waitForFirestoreOps();
+                if (!ops) throw new Error('Firestore is not ready');
+                await ops.addServiceHours({ building, startDate, endDate, openTime, closeTime, reason });
+                await BrandSwal.fire({
+                    icon: 'success',
+                    title: 'บันทึกเวลาทำการพิเศษแล้ว',
+                    text: `${building} เปิด ${openTime} - ${closeTime} น. ในช่วงวันที่ที่กำหนด`,
+                    timer: 1800,
+                    showConfirmButton: false
+                });
+                await refreshAdminData();
+            } catch (err) {
+                console.error('Failed to add service hours:', err);
+                BrandSwal.fire('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถบันทึกเวลาทำการพิเศษได้', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i><span>บันทึกเวลาทำการพิเศษ</span>';
+            }
+        }
+
+        function renderAdminServiceHoursList() {
+            const listEl = document.getElementById('adminServiceHoursList');
+            const badgeEl = document.getElementById('adminHoursCountBadge');
+            if (!listEl) return;
+            if (badgeEl) badgeEl.textContent = `${operatingHoursOverrides.length} รายการ`;
+
+            if (operatingHoursOverrides.length === 0) {
+                listEl.innerHTML = `
+                    <div class="text-center py-14 px-4 bg-slate-50/70 rounded-2xl border border-dashed border-slate-200">
+                        <i class="fa-regular fa-clock text-3xl text-slate-300 mb-3"></i>
+                        <h4 class="font-bold text-slate-700 text-sm">ยังไม่มีเวลาทำการพิเศษ</h4>
+                        <p class="text-xs text-slate-400 mt-1">ระบบกำลังใช้เวลาปกติของแต่ละอาคาร</p>
+                    </div>`;
+                return;
+            }
+
+            const todayStr = getTodayDateString();
+            const sorted = [...operatingHoursOverrides].sort((a, b) => (b.startDate || '').localeCompare(a.startDate || ''));
+            listEl.innerHTML = sorted.map(item => {
+                let statusBadge = '<span class="px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-500">สิ้นสุดแล้ว</span>';
+                if (todayStr >= item.startDate && todayStr <= item.endDate) {
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">กำลังใช้งาน</span>';
+                } else if (item.startDate > todayStr) {
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-600 border border-amber-200">เร็วๆ นี้</span>';
+                }
+                return `
+                    <div class="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div class="space-y-1.5 min-w-0">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-[#01224D] text-white">${escapeHtml(item.building)}</span>
+                                ${statusBadge}
+                            </div>
+                            <div class="text-lg font-bold text-[#0D2535]"><i class="fa-regular fa-clock text-[#5388D8] me-1"></i>${escapeHtml(item.openTime)} - ${escapeHtml(item.closeTime)} น.</div>
+                            <div class="text-xs text-slate-600"><i class="fa-regular fa-calendar me-1"></i>${formatDateThai(item.startDate)} ถึง ${formatDateThai(item.endDate)}</div>
+                            <p class="text-xs text-slate-500">${escapeHtml(item.reason || 'เวลาทำการพิเศษ')}</p>
+                        </div>
+                        ${item.id ? `
+                            <button onclick="handleAdminDeleteServiceHours('${item.id}')" class="px-3 py-2 text-rose-600 hover:text-white hover:bg-rose-600 border border-rose-200 hover:border-rose-600 rounded-xl text-xs font-semibold transition" title="ลบเวลาทำการพิเศษ">
+                                <i class="fa-solid fa-trash-can me-1"></i>ลบ
+                            </button>` : '<span class="text-[11px] text-slate-400 italic">ข้อมูลระบบเดิม</span>'}
+                    </div>`;
+            }).join('');
+        }
+
+        async function handleAdminDeleteServiceHours(id) {
+            const result = await BrandSwal.fire({
+                icon: 'warning',
+                title: 'ยกเลิกเวลาทำการพิเศษ?',
+                text: 'อาคารจะกลับไปใช้เวลาทำการปกติสำหรับช่วงวันที่นี้',
+                showCancelButton: true,
+                confirmButtonText: 'ใช่, ยกเลิก',
+                cancelButtonText: 'กลับ',
+                confirmButtonColor: '#dc2626'
+            });
+            if (!result.isConfirmed) return;
+
+            try {
+                const ops = await waitForFirestoreOps();
+                if (!ops) throw new Error('Firestore is not ready');
+                await ops.deleteServiceHours(id);
+                await refreshAdminData();
+                BrandSwal.fire({ icon: 'success', title: 'ยกเลิกเวลาพิเศษแล้ว', timer: 1300, showConfirmButton: false });
+            } catch (err) {
+                BrandSwal.fire('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถลบเวลาทำการพิเศษได้', 'error');
             }
         }
 
@@ -3870,8 +4340,32 @@
             if (typeof renderBookingTable === 'function') {
                 renderBookingTable();
             }
-            if (typeof renderDashboardTable === 'function' && typeof dashboardRunning !== 'undefined' && dashboardRunning) {
-                renderDashboardTable();
+            if (typeof renderTimeline === 'function' && typeof dashboardRunning !== 'undefined' && dashboardRunning) {
+                renderTimeline();
+            }
+        };
+
+        window.onFirestoreServiceHoursUpdated = function(items) {
+            operatingHoursOverrides = items;
+            if (typeof renderAdminServiceHoursList === 'function') {
+                renderAdminServiceHoursList();
+            }
+            if (document.getElementById('building')?.value) {
+                const selectedStart = document.getElementById('startTime').value;
+                const selectedEnd = document.getElementById('endTime').value;
+                updateTimeOptions();
+                const startSelect = document.getElementById('startTime');
+                const endSelect = document.getElementById('endTime');
+                if (Array.from(startSelect.options).some(option => option.value === selectedStart)) {
+                    startSelect.value = selectedStart;
+                }
+                if (Array.from(endSelect.options).some(option => option.value === selectedEnd)) {
+                    endSelect.value = selectedEnd;
+                }
+                checkFormCompletion();
+            }
+            if (typeof renderTimeline === 'function' && typeof dashboardRunning !== 'undefined' && dashboardRunning) {
+                renderTimeline();
             }
         };
 

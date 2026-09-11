@@ -116,30 +116,46 @@
     },
     "serviceHour": {
       "title": "Service Hour",
-      "description": "Operating hours definition for the library",
+      "description": "Date-range operating hours override for a library building",
       "type": "object",
       "properties": {
-        "day": {
+        "building": {
           "type": "string",
-          "description": "Day name or index",
-          "maxLength": 50
+          "description": "Library building name",
+          "enum": ["Saint Louis", "Saint Benedict"]
+        },
+        "startDate": {
+          "type": "string",
+          "description": "First date of the override in YYYY-MM-DD format",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "Last date of the override in YYYY-MM-DD format",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
         },
         "openTime": {
           "type": "string",
           "description": "Opening time HH:MM",
-          "pattern": "^[0-9]{2}:[0-9]{2}$"
+          "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
         },
         "closeTime": {
           "type": "string",
           "description": "Closing time HH:MM",
-          "pattern": "^[0-9]{2}:[0-9]{2}$"
+          "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
         },
-        "isClosed": {
-          "type": "boolean",
-          "description": "Whether closed on this day"
+        "reason": {
+          "type": "string",
+          "description": "Human-readable label for the special period",
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp",
+          "maxLength": 100
         }
       },
-      "required": ["day", "openTime", "closeTime"]
+      "required": ["building", "startDate", "endDate", "openTime", "closeTime", "reason"]
     }
   },
   "firestore": {

@@ -1042,7 +1042,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
         import { 
             getFirestore, collection, addDoc, getDocs, doc, deleteDoc, 
-            onSnapshot, getDocFromServer 
+            onSnapshot, getDocFromServer, getDoc, runTransaction, writeBatch
         } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
         import {
             getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut,
@@ -1131,6 +1131,46 @@
             }
         }
 
+        // --- ป้องกันการจองซ้อนกัน (race condition) ด้วย "slot lock" เอกสารที่ Firestore บังคับความไม่ซ้ำให้เอง ---
+        // แนวคิด: แบ่งเวลาเป็นช่วงละ 30 นาที (ตรงกับตัวเลือกเวลาในฟอร์ม) แต่ละช่วงของแต่ละห้อง/วัน
+        // จะมีเอกสารใน collection "slots" ที่มี ID ตายตัว (deterministic) เพียง 1 ใบเท่านั้น
+        // Firestore Rules จะอนุญาตให้ "สร้าง" เอกสารนี้ได้ก็ต่อเมื่อยังไม่มีอยู่ก่อน (allow update: if false)
+        // ดังนั้นแม้แต่ client ที่จงใจข้าม transaction ก็ไม่สามารถจองซ้อนได้ เพราะ Firestore เองเป็นคนปฏิเสธ
+        const SLOT_MINUTES = 30;
+
+        function timeStrToMinutes(t) {
+            const [h, m] = String(t || '0:0').split(':').map(Number);
+            return (h || 0) * 60 + (m || 0);
+        }
+
+        function minutesToSlotLabel(mins) {
+            const h = Math.floor(mins / 60).toString().padStart(2, '0');
+            const m = (mins % 60).toString().padStart(2, '0');
+            return `${h}${m}`;
+        }
+
+        // แปลงข้อความใดๆ (รวมภาษาไทย) ให้เป็นสตริงที่ใช้เป็น Firestore document ID ได้อย่างปลอดภัยและไม่ชนกัน
+        function slugForDocId(str) {
+            const s = String(str || '');
+            const ascii = s.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+            let hash = 0;
+            for (let i = 0; i < s.length; i++) {
+                hash = (hash * 31 + s.charCodeAt(i)) >>> 0;
+            }
+            return (ascii ? ascii + '-' : '') + hash.toString(36);
+        }
+
+        // คำนวณรายการ slotId ทั้งหมดที่การจองนี้ต้องล็อก (ช่วงละ 30 นาที ตั้งแต่ startTime ถึงก่อน endTime)
+        function computeSlotIds(building, room, date, startTime, endTime) {
+            const start = timeStrToMinutes(startTime);
+            const end = timeStrToMinutes(endTime);
+            const ids = [];
+            for (let m = start; m < end; m += SLOT_MINUTES) {
+                ids.push(`${slugForDocId(building)}__${slugForDocId(room)}__${date}__${minutesToSlotLabel(m)}`);
+            }
+            return ids;
+        }
+
         window.firestoreOps = {
             db,
             startListeningBookings,
@@ -1145,9 +1185,59 @@
                     handleFirestoreError(err, 'create', 'bookings');
                 }
             },
+            // สร้างการจองแบบมีการล็อกช่วงเวลาจริง (atomic transaction) เพื่อกันการจองซ้อนกัน
+            // ใช้แทน addBooking() สำหรับการจองจากฟอร์มปกติ — ถ้าช่วงเวลาถูกจองไปแล้วจะ throw Error('SLOT_TAKEN')
+            createBookingLocked: async (payload) => {
+                const slotIds = computeSlotIds(payload.building, payload.room, payload.date, payload.startTime, payload.endTime);
+                if (slotIds.length === 0) {
+                    throw new Error('INVALID_TIME_RANGE');
+                }
+                const bookingRef = doc(collection(db, "bookings"));
+                try {
+                    await runTransaction(db, async (tx) => {
+                        // 1) ต้องอ่าน (get) ทุก slot ก่อน แล้วค่อย set ทั้งหมด (ข้อกำหนดของ Firestore transaction)
+                        for (const slotId of slotIds) {
+                            const slotSnap = await tx.get(doc(db, "slots", slotId));
+                            if (slotSnap.exists()) {
+                                throw new Error('SLOT_TAKEN');
+                            }
+                        }
+                        // 2) ล็อกทุกช่วงเวลา + สร้างรายการจอง ในธุรกรรมเดียวกัน (all-or-nothing)
+                        const nowIso = new Date().toISOString();
+                        slotIds.forEach((slotId) => {
+                            tx.set(doc(db, "slots", slotId), {
+                                bookingId: bookingRef.id,
+                                building: payload.building,
+                                room: payload.room,
+                                date: payload.date,
+                                createdAt: nowIso
+                            });
+                        });
+                        tx.set(bookingRef, { ...payload, slotIds, createdAt: nowIso });
+                    });
+                    return { success: true, id: bookingRef.id };
+                } catch (err) {
+                    if (err && err.message === 'SLOT_TAKEN') throw err;
+                    handleFirestoreError(err, 'create', 'bookings(locked)');
+                }
+            },
             deleteBooking: async (id) => {
                 try {
-                    await deleteDoc(doc(db, "bookings", id));
+                    // อ่านรายการจองก่อนลบ เพื่อปลดล็อก slot ที่ผูกไว้ (ถ้ามี) พร้อมกันในธุรกรรมเดียว
+                    let slotIds = [];
+                    try {
+                        const snap = await getDoc(doc(db, "bookings", id));
+                        if (snap.exists() && Array.isArray(snap.data().slotIds)) {
+                            slotIds = snap.data().slotIds;
+                        }
+                    } catch (e) {
+                        console.warn('Could not read booking before delete (slots may be orphaned):', e);
+                    }
+
+                    const batch = writeBatch(db);
+                    batch.delete(doc(db, "bookings", id));
+                    slotIds.forEach((slotId) => batch.delete(doc(db, "slots", slotId)));
+                    await batch.commit();
                     return { success: true };
                 } catch (err) {
                     handleFirestoreError(err, 'delete', `bookings/${id}`);
@@ -2547,7 +2637,7 @@
                 const ops = await waitForFirestoreOps();
                 if (ops) {
                     try {
-                        await ops.addBooking(payload);
+                        await ops.createBookingLocked(payload);
                         handleBookingSuccess();
                         if (SYNC_TO_LEGACY_SHEET && SCRIPT_URL) {
                             fetch(SCRIPT_URL, {
@@ -2557,14 +2647,27 @@
                             }).catch(e => console.warn('Background sync note:', e));
                         }
                     } catch (err) {
-                        console.error('Firestore save failed:', err);
-                        BrandSwal.fire({
-                            title: 'เกิดข้อผิดพลาด!',
-                            text: 'ไม่สามารถบันทึกข้อมูลการจองได้ กรุณาลองใหม่อีกครั้ง',
-                            icon: 'error',
-                            confirmButtonText: 'รับทราบ',
-                            confirmButtonColor: '#e11d48'
-                        });
+                        if (err && err.message === 'SLOT_TAKEN') {
+                            console.warn('Booking slot conflict detected at write-time');
+                            BrandSwal.fire({
+                                title: 'ช่วงเวลานี้ถูกจองแล้ว',
+                                text: 'มีคนจองห้องนี้ในช่วงเวลาที่คุณเลือกไปพอดี (อาจกดจองพร้อมกัน) กรุณาเลือกเวลาอื่น',
+                                icon: 'warning',
+                                confirmButtonColor: '#1e3c72'
+                            });
+                            if (typeof refreshBookingsData === 'function') {
+                                await refreshBookingsData();
+                            }
+                        } else {
+                            console.error('Firestore save failed:', err);
+                            BrandSwal.fire({
+                                title: 'เกิดข้อผิดพลาด!',
+                                text: 'ไม่สามารถบันทึกข้อมูลการจองได้ กรุณาลองใหม่อีกครั้ง',
+                                icon: 'error',
+                                confirmButtonText: 'รับทราบ',
+                                confirmButtonColor: '#e11d48'
+                            });
+                        }
                     } finally {
                         document.getElementById("submitBtn").innerHTML = "<i class='fa-solid fa-paper-plane me-2'></i>ส่งข้อมูลการจอง";
                         checkFormCompletion();

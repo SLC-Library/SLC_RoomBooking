@@ -45,6 +45,13 @@ service cloud.firestore {
         && data.reason is string && data.reason.size() > 0 && data.reason.size() <= 200;
     }
 
+    // เอกสาร "slots" คือกลไกล็อกช่วงเวลา 30 นาทีต่อห้องต่อวัน — ตัว ID เองตายตัวอยู่แล้ว
+    // (ห้อง+วัน+เวลา สร้างจากฝั่ง client เสมอ) จึงเช็คแค่รูปแบบและชนิดข้อมูลพื้นฐาน
+    function isValidSlot(data) {
+      return data.bookingId is string && data.bookingId.size() > 0
+        && data.room is string && data.date is string;
+    }
+
     match /bookings/{bookingId} {
       allow read: if true;
       // ผู้ใช้ทั่วไปยังจองห้องได้โดยไม่ต้องล็อกอิน (ฟอร์มจองสาธารณะ) แต่ข้อมูลต้องผ่าน isValidBooking
@@ -66,6 +73,18 @@ service cloud.firestore {
       allow create: if isAdmin() && isValidId(serviceHourId) && isValidServiceHour(incoming());
       allow update: if isAdmin() && isValidId(serviceHourId) && isValidServiceHour(incoming());
       allow delete: if isAdmin() && isValidId(serviceHourId);
+    }
+
+    // Slot lock ต่อช่วงเวลา 30 นาที — กลไกกันจองซ้อนจริง
+    // "allow create" ใช้ได้เฉพาะตอนที่เอกสารนั้นยังไม่มีอยู่เท่านั้น (นิยามของ Firestore Rules)
+    // ส่วน "allow update: if false" ทำให้เอกสารที่มีอยู่แล้วแก้ไข/เขียนทับไม่ได้เด็ดขาด
+    // ผลคือ: ใครก็ตามที่พยายามจองช่วงเวลาที่มีคนล็อกไปแล้ว จะถูก Firestore ปฏิเสธเสมอ
+    // ไม่ว่าจะจงใจข้าม transaction ในแอปหรือยิง request ตรงก็ตาม
+    match /slots/{slotId} {
+      allow read: if true;
+      allow create: if isValidId(slotId) && isValidSlot(incoming());
+      allow update: if false;
+      allow delete: if isAdmin();
     }
 
     // เอกสาร allowlist ของแอดมิน — เพิ่ม/ลบด้วยตนเองผ่าน Firestore Console เท่านั้น

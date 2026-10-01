@@ -2921,7 +2921,13 @@
         function showUpcomingClosuresPopup() {
             const todayStr = new Date().toLocaleDateString('sv-SE');
             const horizon = new Date();
-            horizon.setDate(horizon.getDate() + 14);
+            const dayOfMonth = horizon.getDate();
+            horizon.setDate(1);
+            horizon.setMonth(horizon.getMonth() + 1);
+            horizon.setDate(Math.min(
+                dayOfMonth,
+                new Date(horizon.getFullYear(), horizon.getMonth() + 1, 0).getDate()
+            ));
             const horizonStr = horizon.toLocaleDateString('sv-SE');
 
             const upcomingClosures = maintenanceSlots

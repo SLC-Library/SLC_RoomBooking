@@ -1020,21 +1020,6 @@
             </div>
         </div>
 
-        <div class="fixed bottom-8 right-8 z-[100] flex items-center justify-center">
-            <a id="fab-fb" href="https://www.facebook.com/SLCLib/" target="_blank" aria-label="ติดต่อผ่าน Facebook"
-               class="absolute bottom-0 right-0 w-12 h-12 bg-[#5388D8] rounded-full shadow-lg flex items-center justify-center text-white transition-all duration-300 transform opacity-0 scale-0">
-                <i class="fa-brands fa-facebook-f text-2xl"></i>
-            </a>
-
-            <a id="fab-line" href="https://line.me/ti/g2/rJDHa3r305wqq488K1rnMf-5g6U2tdpdYNF4TA?utm_source=invitation&utm_medium=link_copy&utm_campaign=default" target="_blank" aria-label="ติดต่อผ่าน LINE"
-               class="absolute bottom-0 right-0 w-12 h-12 bg-green-500 rounded-full shadow-lg flex items-center justify-center text-white transition-all duration-300 transform opacity-0 scale-0">
-                <i class="fa-brands fa-line text-2xl"></i>
-            </a>
-
-            <button id="fab-main" aria-label="เปิด/ปิดเมนูช่องทางติดต่อ" class="w-12 h-12 bg-[#0D2535] rounded-full shadow-2xl flex items-center justify-center text-white hover:scale-105 transition-transform z-10">
-                <i id="fab-icon" class="fa-solid fa-headset text-3xl"></i>
-            </button>
-        </div>
     </main>
 
     <!-- Firebase Firestore Integration -->
@@ -3092,37 +3077,6 @@
             loadBookings();
         }
 
-        const mainBtn = document.getElementById('fab-main');
-        const fbBtn = document.getElementById('fab-fb');
-        const lineBtn = document.getElementById('fab-line');
-        const icon = document.getElementById('fab-icon');
-        let isOpen = false;
-
-        mainBtn.addEventListener('click', () => {
-            isOpen = !isOpen;
-            if (isOpen) {
-                fbBtn.style.transform = 'translateY(-60px)';
-                fbBtn.classList.replace('opacity-0', 'opacity-100');
-                fbBtn.classList.replace('scale-0', 'scale-100');
-                
-                lineBtn.style.transform = 'translateX(-60px)';
-                lineBtn.classList.replace('opacity-0', 'opacity-100');
-                lineBtn.classList.replace('scale-0', 'scale-100');
-                
-                icon.classList.replace('fa-headset', 'fa-xmark');
-            } else {
-                fbBtn.style.transform = 'translateY(0)';
-                fbBtn.classList.replace('opacity-100', 'opacity-0');
-                fbBtn.classList.replace('scale-100', 'scale-0');
-                
-                lineBtn.style.transform = 'translateX(0)';
-                lineBtn.classList.replace('opacity-100', 'opacity-0');
-                lineBtn.classList.replace('scale-100', 'scale-0');
-                
-                icon.classList.replace('fa-xmark', 'fa-headset');
-            }
-        });
-
         /* ===========================================================
            DASHBOARD (Real-time)
         =========================================================== */
@@ -4493,5 +4447,6 @@
   }
 }
     </script>
+    <script src="./assets/lumi/lumi-widget.js"></script>
 </body>
 </html>

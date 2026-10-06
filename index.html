@@ -1425,7 +1425,7 @@
         });
 
         function showMascotAlert(options, mood) {
-            const { icon, ...alertOptions } = options;
+            const { icon, didOpen, ...alertOptions } = options;
             const mascotMood = mood || (icon === 'success' ? 'happy' : icon === 'error' ? 'surprised' : 'thinking');
             return BrandSwal.fire({
                 imageUrl: new URL(`./public/assets/lumi/lumi-${mascotMood}.png`, window.location.href).href,
@@ -1433,6 +1433,20 @@
                 imageHeight: 184,
                 imageAlt: 'Lumi',
                 imageClass: 'lumi-swal-image',
+                didOpen: (popup) => {
+                    const mascotImage = popup.querySelector('.lumi-swal-image');
+                    const title = popup.querySelector('.brand-swal-title');
+                    if (mascotImage) {
+                        mascotImage.style.setProperty('margin', '0.75em auto -0.5em', 'important');
+                    }
+                    if (title) {
+                        title.style.setProperty('margin', '0', 'important');
+                        title.style.setProperty('padding', '0 1em', 'important');
+                    }
+                    if (typeof didOpen === 'function') {
+                        didOpen(popup);
+                    }
+                },
                 ...alertOptions
             });
         }

@@ -104,6 +104,13 @@
         .brand-swal-html {
             color: #475569 !important;
         }
+        .lumi-swal-image {
+            border-radius: 50%;
+            object-fit: contain;
+            background: #eef4fc;
+            border: 2px solid #c9d9f2;
+            padding: 5px;
+        }
         .brand-swal-actions {
             gap: 10px !important;
             margin-top: 1.25rem !important;
@@ -1411,6 +1418,19 @@
             }
         });
 
+        function showMascotAlert(options, mood) {
+            const { icon, ...alertOptions } = options;
+            const mascotMood = mood || (icon === 'success' ? 'happy' : icon === 'error' ? 'surprised' : 'thinking');
+            return BrandSwal.fire({
+                imageUrl: new URL(`./public/assets/lumi/lumi-${mascotMood}.png`, window.location.href).href,
+                imageWidth: 104,
+                imageHeight: 104,
+                imageAlt: 'Lumi',
+                imageClass: 'lumi-swal-image',
+                ...alertOptions
+            });
+        }
+
         // สถานะการล็อกอินแอดมิน อ้างอิงจาก Firebase Auth จริง (ไม่ใช่รหัสผ่านที่ฝังในโค้ด)
         const ADMIN_INACTIVITY_TIMEOUT_MS = 20 * 60 * 1000;
         const ADMIN_ACTIVITY_THROTTLE_MS = 5 * 1000;
@@ -2583,23 +2603,23 @@
 
             // ตรวจสอบวันปิดทั้งวัน
             if (isDateFullyClosed(bookingDateValue)) {
-                BrandSwal.fire({
+                showMascotAlert({
                     title: 'ห้องสมุดปิดทำการ',
                     text: 'ไม่สามารถทำรายการจองในวันที่ห้องสมุดปิดทำการได้ กรุณาเลือกวันอื่น',
                     icon: 'warning',
                     confirmButtonColor: '#01224D'
-                });
+                }, 'thinking');
                 return;
             }
 
             const maintConflict = getMaintenanceConflict(buildingValue, roomValue, bookingDateValue, startTimeValue, endTimeValue);
             if (maintConflict) {
-                BrandSwal.fire({
+                showMascotAlert({
                     title: 'ช่วงเวลานี้ปิดใช้งานชั่วคราว',
                     text: maintConflict.reason || 'ห้องสมุดปิดใช้งานในช่วงเวลานี้ กรุณาเลือกวัน/เวลาอื่น',
                     icon: 'info',
                     confirmButtonColor: '#01224D'
-                });
+                }, 'thinking');
                 return;
             }
 
@@ -2646,7 +2666,7 @@
                 };
 
                 const handleBookingSuccess = () => {
-                    BrandSwal.fire({
+                    showMascotAlert({
                         title: 'จองสำเร็จ!',
                         text: 'โปรดติดต่อเจ้าหน้าที่ห้องสมุด SLC ก่อนเข้าใช้งาน',
                         icon: 'success',
@@ -2691,24 +2711,24 @@
                     } catch (err) {
                         if (err && err.message === 'SLOT_TAKEN') {
                             console.warn('Booking slot conflict detected at write-time');
-                            BrandSwal.fire({
+                            showMascotAlert({
                                 title: 'ช่วงเวลานี้ถูกจองแล้ว',
                                 text: 'มีคนจองห้องนี้ในช่วงเวลาที่คุณเลือกไปพอดี (อาจกดจองพร้อมกัน) กรุณาเลือกเวลาอื่น',
                                 icon: 'warning',
                                 confirmButtonColor: '#1e3c72'
-                            });
+                            }, 'surprised');
                             if (typeof refreshBookingsData === 'function') {
                                 await refreshBookingsData();
                             }
                         } else {
                             console.error('Firestore save failed:', err);
-                            BrandSwal.fire({
+                            showMascotAlert({
                                 title: 'เกิดข้อผิดพลาด!',
                                 text: 'ไม่สามารถบันทึกข้อมูลการจองได้ กรุณาลองใหม่อีกครั้ง',
                                 icon: 'error',
                                 confirmButtonText: 'รับทราบ',
                                 confirmButtonColor: '#e11d48'
-                            });
+                            }, 'surprised');
                         }
                     } finally {
                         document.getElementById("submitBtn").innerHTML = "<i class='fa-solid fa-paper-plane me-2'></i>ส่งข้อมูลการจอง";
@@ -2727,24 +2747,24 @@
                         });
                         const result = await res.json();
                         if (result.status === "error") {
-                            BrandSwal.fire({
+                            showMascotAlert({
                                 title: 'ไม่สามารถจองได้',
                                 text: result.message,
                                 icon: 'warning',
                                 confirmButtonColor: '#1d4ed8'
-                            });
+                            }, 'surprised');
                         } else {
                             handleBookingSuccess();
                         }
                     } catch (err) {
                         console.error(err);
-                        BrandSwal.fire({
+                        showMascotAlert({
                             title: 'เกิดข้อผิดพลาด!',
                             text: 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้ง',
                             icon: 'error',
                             confirmButtonText: 'รับทราบ',
                             confirmButtonColor: '#e11d48'
-                        });
+                        }, 'surprised');
                     } finally {
                         document.getElementById("submitBtn").innerHTML = "<i class='fa-solid fa-paper-plane me-2'></i>ส่งข้อมูลการจอง";
                         checkFormCompletion();
@@ -2752,13 +2772,13 @@
                 }
             } catch (err) {
                 console.error('Failed to refresh bookings before submit:', err);
-                BrandSwal.fire({
+                showMascotAlert({
                     title: 'เกิดข้อผิดพลาด!',
                     text: 'ไม่สามารถตรวจสอบการจองได้ กรุณาลองใหม่อีกครั้ง',
                     icon: 'error',
                     confirmButtonText: 'รับทราบ',
                     confirmButtonColor: '#e11d48'
-                });
+                }, 'surprised');
                 checkFormCompletion();
             }
         });
@@ -3061,14 +3081,14 @@
                         </div>`;
             }).join('');
 
-            BrandSwal.fire({
+            showMascotAlert({
                 icon: 'warning',
                 title: title,
                 html: cardsHtml + (footNote ? `<p style="font-size:13px;color:#94a3b8;margin:0;">${escapeHtml(footNote)}</p>` : ''),
                 confirmButtonText: 'รับทราบ',
                 allowOutsideClick: true,
                 allowEscapeKey: true
-            });
+            }, 'thinking');
         }
         
         async function deleteBooking(requester, date, startTime, room, docId) {
@@ -3990,7 +4010,7 @@
 
                 await ops.addMaintenance(payload);
 
-                BrandSwal.fire({
+                showMascotAlert({
                     icon: 'success',
                     title: 'บันทึกสำเร็จ!',
                     text: `ประกาศปิดปรับปรุงห้องเรียบร้อยแล้ว (${building} - ${room})`,
@@ -4001,11 +4021,11 @@
                 await refreshAdminData();
             } catch (err) {
                 console.error("Failed to add maintenance:", err);
-                BrandSwal.fire({
+                showMascotAlert({
                     icon: 'error',
                     title: 'เกิดข้อผิดพลาด',
                     text: 'ไม่สามารถบันทึกข้อมูลได้: ' + (err.message || err)
-                });
+                }, 'surprised');
             } finally {
                 if (submitBtn) {
                     submitBtn.disabled = false;
@@ -4278,7 +4298,7 @@
 
                     await ops.deleteMaintenance(id);
 
-                    BrandSwal.fire({
+                    showMascotAlert({
                         icon: 'success',
                         title: 'ลบรายการเรียบร้อย',
                         text: 'ห้องเปิดให้บริการตามปกติแล้ว',
@@ -4288,7 +4308,11 @@
 
                     await refreshAdminData();
                 } catch (err) {
-                    BrandSwal.fire('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถลบรายการได้', 'error');
+                    showMascotAlert({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: err.message || 'ไม่สามารถลบรายการได้'
+                    }, 'surprised');
                 }
             }
         }

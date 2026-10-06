@@ -1030,7 +1030,7 @@
             onSnapshot, getDocFromServer, getDoc, runTransaction, writeBatch
         } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
         import {
-            getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut,
+            getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut,
             setPersistence, browserSessionPersistence
         } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 
@@ -1046,18 +1046,35 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+        const approvedAdminEmails = new Set([
+            "library@slc.ac.th",
+            "akira@slc.ac.th"
+        ]);
 
         // --- Admin authentication (Firebase Auth) ---
-        // แทนที่ระบบรหัสผ่านแบบฝังในโค้ด (client-side) ด้วยบัญชีผู้ใช้จริงผ่าน Firebase Auth
-        // บัญชีแอดมินต้องถูกสร้างไว้ล่วงหน้าใน Firebase Console > Authentication
-        // และต้องมีเอกสารของ UID นั้นอยู่ใน collection "admins" เพื่อให้ Firestore Rules อนุญาตสิทธิ์เขียนข้อมูล
+        // Admin access is allowlisted by UID, approved email, or verified email in "adminEmails".
         const auth = getAuth(app);
         setPersistence(auth, browserSessionPersistence).catch((e) => {
             console.warn("Auth persistence setup warning:", e);
         });
 
         window.authOps = {
-            signIn: (email, password) => signInWithEmailAndPassword(auth, email, password),
+            signInWithGoogle: () => {
+                const provider = new GoogleAuthProvider();
+                provider.setCustomParameters({ prompt: "select_account" });
+                return signInWithPopup(auth, provider);
+            },
+            hasAdminAccess: async (user) => {
+                if (!user) return false;
+
+                const uidAdmin = await getDoc(doc(db, "admins", user.uid));
+                if (uidAdmin.exists()) return true;
+                if (!user.email || !user.emailVerified) return false;
+                if (approvedAdminEmails.has(user.email.toLowerCase())) return true;
+
+                const emailAdmin = await getDoc(doc(db, "adminEmails", user.email));
+                return emailAdmin.exists();
+            },
             signOutAdmin: () => signOut(auth),
             onAuthStateChanged: (cb) => onAuthStateChanged(auth, cb),
             getCurrentUser: () => auth.currentUser
@@ -1399,6 +1416,7 @@
         const ADMIN_ACTIVITY_THROTTLE_MS = 5 * 1000;
         const ADMIN_LAST_ACTIVITY_STORAGE_KEY = 'slcAdminLastActivityAt';
         let currentAdminUser = null;
+        let currentAdminAuthorized = false;
         let adminInactivityTimer = null;
         let adminLastActivityAt = 0;
         let adminActivityThrottledAt = 0;
@@ -1476,13 +1494,26 @@
 
         function handleAdminAuthStateChange(user) {
             currentAdminUser = user;
+            currentAdminAuthorized = false;
             if (user) {
-                adminLastActivityAt = readStoredAdminActivity();
-                if (!adminLastActivityAt) {
-                    adminLastActivityAt = Date.now();
-                    storeAdminActivity(adminLastActivityAt);
-                }
-                scheduleAdminInactivityTimer();
+                window.authOps.hasAdminAccess(user).then((isAuthorized) => {
+                    if (!currentAdminUser || currentAdminUser.uid !== user.uid) return;
+                    currentAdminAuthorized = isAuthorized;
+                    if (!isAuthorized) {
+                        clearAdminInactivityTimer();
+                        if (isAdminViewVisible()) switchView('booking');
+                        return;
+                    }
+                    adminLastActivityAt = readStoredAdminActivity();
+                    if (!adminLastActivityAt) {
+                        adminLastActivityAt = Date.now();
+                        storeAdminActivity(adminLastActivityAt);
+                    }
+                    scheduleAdminInactivityTimer();
+                }).catch((err) => {
+                    console.error('Unable to verify Admin access:', err);
+                    if (isAdminViewVisible()) switchView('booking');
+                });
                 return;
             }
 
@@ -1525,24 +1556,42 @@
         });
 
         function isAdminLoggedIn() {
-            return Boolean(currentAdminUser || (window.authOps && window.authOps.getCurrentUser()));
+            return Boolean(currentAdminAuthorized && (currentAdminUser || (window.authOps && window.authOps.getCurrentUser())));
         }
 
-        // แสดงฟอร์มเข้าสู่ระบบด้วยอีเมล/รหัสผ่านของบัญชีแอดมินจริง (Firebase Auth)
-        // คืนค่า true เมื่อผู้ใช้ล็อกอินสำเร็จ (หรือล็อกอินอยู่แล้ว), false เมื่อยกเลิก/ผิดพลาด
+        // แสดง Google Sign-In และตรวจสอบ allowlist ก่อนเปิดหน้า Admin
         async function ensureAdminAuth(promptTitle) {
             if (adminSessionLocking) return false;
             if (isAdminLoggedIn()) return true;
 
+            const currentUser = window.authOps && window.authOps.getCurrentUser();
+            if (currentUser) {
+                try {
+                    const isAuthorized = await window.authOps.hasAdminAccess(currentUser);
+                    if (isAuthorized) {
+                        currentAdminUser = currentUser;
+                        currentAdminAuthorized = true;
+                        return true;
+                    }
+                    await window.authOps.signOutAdmin();
+                } catch (err) {
+                    console.error('Unable to verify Admin access:', err);
+                    await BrandSwal.fire({
+                        icon: 'error',
+                        title: 'ตรวจสอบสิทธิ์ไม่สำเร็จ',
+                        text: 'ไม่สามารถตรวจสอบบัญชีผู้ดูแลได้ กรุณาลองใหม่อีกครั้ง'
+                    });
+                    return false;
+                }
+            }
+
             const result = await BrandSwal.fire({
                 title: promptTitle || '🔒 เข้าสู่ระบบ Admin Control Panel',
                 html: `
-                    <p class="text-xs text-slate-500 mb-3 text-center">เฉพาะเจ้าหน้าที่ห้องสมุด SLC Library เท่านั้น<br>กรุณาเข้าสู่ระบบด้วยบัญชีแอดมิน:</p>
-                    <input type="email" id="swal-admin-email" class="swal2-input" placeholder="อีเมลแอดมิน" autocapitalize="off" autocorrect="off">
-                    <input type="password" id="swal-admin-password" class="swal2-input" placeholder="รหัสผ่าน" autocapitalize="off" autocorrect="off">
+                    <p class="text-xs text-slate-500 mb-3 text-center">เฉพาะบัญชี Google ที่ได้รับอนุมัติจากผู้ดูแลระบบเท่านั้น</p>
                 `,
                 showCancelButton: true,
-                confirmButtonText: '<i class="fa-solid fa-key me-1.5"></i>เข้าสู่ระบบ',
+                confirmButtonText: '<i class="fa-brands fa-google me-1.5"></i>เข้าสู่ระบบด้วย Google',
                 cancelButtonText: 'ยกเลิก',
                 confirmButtonColor: '#01224D',
                 focusConfirm: false,
@@ -1556,19 +1605,28 @@
                     actions: 'brand-swal-actions'
                 },
                 preConfirm: async () => {
-                    const emailEl = document.getElementById('swal-admin-email');
-                    const pwdEl = document.getElementById('swal-admin-password');
-                    const email = emailEl ? emailEl.value.trim() : '';
-                    const password = pwdEl ? pwdEl.value : '';
-                    if (!email || !password) {
-                        Swal.showValidationMessage('กรุณากรอกอีเมลและรหัสผ่านให้ครบถ้วน');
-                        return false;
-                    }
                     try {
-                        await window.authOps.signIn(email, password);
+                        const credential = await window.authOps.signInWithGoogle();
+                        const user = credential.user;
+                        const isAuthorized = await window.authOps.hasAdminAccess(user);
+                        if (!isAuthorized) {
+                            await window.authOps.signOutAdmin();
+                            Swal.showValidationMessage('บัญชี Google นี้ยังไม่ได้รับอนุมัติให้เข้าถึงระบบ Admin');
+                            return false;
+                        }
+                        currentAdminUser = user;
+                        currentAdminAuthorized = true;
                         return true;
                     } catch (err) {
-                        Swal.showValidationMessage('เข้าสู่ระบบไม่สำเร็จ: อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+                        console.error('Google Admin sign-in failed:', err);
+                        const message = err && err.code === 'auth/unauthorized-domain'
+                            ? 'โดเมนของเว็บไซต์ยังไม่ได้รับอนุญาตใน Firebase Authentication'
+                            : err && err.code === 'auth/operation-not-allowed'
+                                ? 'ยังไม่ได้เปิด Google Sign-In ใน Firebase Authentication'
+                                : err && err.code === 'auth/account-exists-with-different-credential'
+                                    ? 'อีเมลนี้มีบัญชี Firebase เดิม ต้องให้ผู้ดูแลเชื่อมบัญชีกับ Google ก่อน'
+                                    : 'เข้าสู่ระบบด้วย Google ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
+                        Swal.showValidationMessage(message);
                         return false;
                     }
                 },
@@ -1623,6 +1681,7 @@
             adminLastActivityAt = 0;
             removeStoredAdminActivity();
             currentAdminUser = null;
+            currentAdminAuthorized = false;
 
             // ซ่อนหน้า Admin ก่อนรอ Firebase sign-out เพื่อไม่ให้ข้อมูลค้างบนหน้าจอ
             switchView('booking');

@@ -1,8 +1,7 @@
 /**
  * ==============================================================================
- * 🐑 LUMI LIBRARY AI CHAT WIDGET - STANDALONE JAVASCRIPT INJECTION SCRIPT
- * Theme: Geometric Balance (Slate Neutral + Deep Blue Accent)
- * Library: งานวิทยบริการและวารสารวิชาการ วิทยาลัยเซนต์หลุยส์ (Saint Louis College Library)
+ * 🐑 LUMI ROOM BOOKING CHAT WIDGET - STANDALONE JAVASCRIPT INJECTION SCRIPT
+ * Theme: Deep Navy + Blue
  * Usage: Paste in Chrome DevTools Console, DevTools Local Overrides, or include in <script>
  * ==============================================================================
  */
@@ -53,7 +52,7 @@
     }
     #lumi-widget-root strong {
       font-weight: 700;
-      color: #1e3a8a;
+      color: #0D2535;
     }
     #lumi-widget-root ::-webkit-scrollbar {
       width: 5px;
@@ -67,7 +66,7 @@
       border-radius: 4px;
     }
     #lumi-widget-root ::-webkit-scrollbar-thumb:hover {
-      background: #1e3a8a;
+      background: #5388D8;
     }
     .lumi-bubble-enter {
       animation: lumiFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -87,9 +86,9 @@
       gap: 0.375rem;
       padding: 0.375rem 0.75rem;
       border-radius: 0.75rem;
-      background-color: #eff6ff;
-      color: #1e3a8a;
-      border: 1px solid #bfdbfe;
+      background-color: #eef4fc;
+      color: #0D2535;
+      border: 1px solid #c9d9f2;
       font-size: 0.75rem;
       font-weight: 600;
       text-decoration: none;
@@ -97,10 +96,59 @@
       box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     }
     .lumi-link-btn:hover {
-      background-color: #dbeafe;
-      border-color: #93c5fd;
-      color: #172554;
+      background-color: #e1ecfb;
+      border-color: #9cb8e2;
+      color: #0D2535;
       transform: translateY(-1px);
+    }
+    #lumi-widget-root [class~="bg-blue-900"] {
+      background-color: #0D2535 !important;
+    }
+    #lumi-widget-root [class~="bg-blue-800"] {
+      background-color: #5388D8 !important;
+    }
+    #lumi-widget-root [class~="bg-blue-700"] {
+      background-color: #3f70b7 !important;
+    }
+    #lumi-widget-root [class~="text-blue-900"] {
+      color: #0D2535 !important;
+    }
+    #lumi-widget-root [class~="text-blue-700"] {
+      color: #3f70b7 !important;
+    }
+    #lumi-widget-root [class~="bg-blue-50"] {
+      background-color: #eef4fc !important;
+    }
+    #lumi-widget-root [class~="bg-blue-100"] {
+      background-color: #e3edfb !important;
+    }
+    #lumi-widget-root [class~="border-blue-100"],
+    #lumi-widget-root [class~="border-blue-200"] {
+      border-color: #c9d9f2 !important;
+    }
+    #lumi-widget-root [class~="border-blue-300"] {
+      border-color: #9cb8e2 !important;
+    }
+    #lumi-widget-root [class~="hover:bg-blue-800"]:hover {
+      background-color: #436fb3 !important;
+    }
+    #lumi-widget-root [class~="hover:bg-blue-100"]:hover {
+      background-color: #d7e5f8 !important;
+    }
+    #lumi-widget-root [class~="hover:bg-blue-50"]:hover {
+      background-color: #e4eefb !important;
+    }
+    #lumi-widget-root [class~="hover:border-blue-300"]:hover {
+      border-color: #9cb8e2 !important;
+    }
+    #lumi-widget-root [class~="hover:text-blue-900"]:hover {
+      color: #0D2535 !important;
+    }
+    #lumi-widget-root [class~="focus-within:border-blue-900"]:focus-within {
+      border-color: #5388D8 !important;
+    }
+    #lumi-widget-root [class~="focus:border-blue-900"]:focus {
+      border-color: #5388D8 !important;
     }
   `;
   document.head.appendChild(styleEl);
@@ -129,7 +177,7 @@
       <circle cx="67" cy="57" r="4.5" fill="#FDA4AF" opacity="0.7" />
     `;
     const cap = `
-      <path d="M40 22 L50 17 L60 22 L50 26 Z" fill="#1E3A8A" stroke="#38BDF8" stroke-width="1" />
+      <path d="M40 22 L50 17 L60 22 L50 26 Z" fill="#0D2535" stroke="#5388D8" stroke-width="1" />
       <circle cx="50" cy="17" r="1.2" fill="#F59E0B" />
       <circle cx="59" cy="25" r="1" fill="#F59E0B" />
     `;
@@ -209,169 +257,80 @@
   `;
   };
 
-  // Card Jaaaaaa
   const FAQS = [
     {
       id: 1,
-      catTh: 'บริการยืม-คืน',
-      catEn: 'Circulation',
-      qTh: 'ยืมหนังสือได้กี่วัน?',
-      qEn: 'What is the loan period?',
-      aTh: '📚 **สิทธิ์การยืมหนังสือ (Loan Policy):**\n**• นักศึกษา ป.ตรี, บุคลากร, หลักสูตรระยะสั้น:** 7 เล่ม / 7 วัน\n**• นักศึกษา ป.โท:** 10 เล่ม / 14 วัน\n**• คณาจารย์:** 20 เล่ม / 30 วัน\n<strong style="color: #16a34a;">• ต่ออายุออนไลน์ได้ 2 ครั้ง</strong>\n ค่าปรับส่งเกินกำหนด: 10 บาท/เล่ม/วัน\nสามารถต่ออายุออนไลน์ได้ด้วยตนเองผ่านระบบ Web OPAC ก่อนครบกำหนดส่งครับ',
-      aEn: '📚 **Borrowing Entitlement:**\n**• Undergraduates, staff, short-course participants:** 7 items / 7 days \n**• Postgraduates:** 10 items / 14 days\n**• Faculty:** 20 items / 30 days\n• 2 renewals\n** Overdue fine: 10 THB/item/day\nYou can renew online via Web OPAC before the due date.',
-      links: [
-        { titleTh: 'เข้าสู่ระบบ Web OPAC', titleEn: 'Web OPAC System', url: 'http://slclib.slc.ac.th/' }
-      ]
+      catTh: 'วิธีจอง',
+      catEn: 'How to book',
+      qTh: 'ต้องทำอย่างไรถึงจะจองห้องได้?',
+      qEn: 'How do I book a room?',
+      aTh: 'เลือกอาคาร ห้อง วันที่ และช่วงเวลาว่าง จากนั้นกรอกข้อมูลผู้จองและรายละเอียดที่จำเป็น แล้วกด **ส่งข้อมูลการจอง** ระบบจะแจ้งผลเมื่อบันทึกสำเร็จ',
+      aEn: 'Choose a building, room, date, and available time slot. Enter the required booking details, then select **Submit booking**. The system will confirm when the booking is saved.'
     },
     {
       id: 2,
-      catTh: 'จองห้องประชุม',
-      catEn: 'Room Reservation',
-      qTh: 'จองห้องประชุมออนไลน์ได้อย่างไร?',
-      qEn: 'How can I book a meeting room online?',
-      aTh: '📝 **การจองห้องประชุมออนไลน์:**\nสามารถจองได้สะดวกรวดเร็วผ่านระบบจองห้องประชุมออนไลน์ของห้องสมุด โดยคลิกที่ลิงก์ด้านล่างนี้ได้เลยครับ~',
-      aEn: '📝 **Room Reservation:**\nYou can book through the Library Online Room Reservation system by clicking the link below:',
-      links: [
-        { titleTh: 'ระบบจองห้องประชุม Conference Room Booking', titleEn: 'SLC Conference Room Booking', url: 'https://slc-library.github.io/SLC_RoomBooking/' }
-      ]
+      catTh: 'เงื่อนไข',
+      catEn: 'Booking rules',
+      qTh: 'จองห้องได้นานสูงสุดเท่าไร?',
+      qEn: 'What is the maximum booking duration?',
+      aTh: 'จองได้ไม่เกิน **2 ชั่วโมงต่อคนต่อวัน** ตามระเบียบการใช้ห้องประชุม',
+      aEn: 'Bookings are limited to **2 hours per person per day** under the meeting room rules.'
     },
     {
       id: 3,
-      catTh: 'ฐานข้อมูลออนไลน์',
-      catEn: 'Databases',
-      qTh: 'รหัสผ่านฐานข้อมูลออนไลน์?',
-      qEn: 'What is the password for online database access?',
-	    aTh: "🔑 **รหัสผ่านฐานข้อมูลออนไลน์:**\n• สำหรับนักศึกษา, คณาจารย์และบุคลากรของวิทยาลัยเซนต์หลุย์ \n(เข้าถึงด้วย SLC Mail)",
-      aEn: '🔑 **Online Database Password:**\n• For Students, Faculty and Staff of Saint Louis College (Access with SLC Mail)',
-      links: [
-        { titleTh: 'รหัสผ่านฐานข้อมูลออนไลน์', titleEn: 'Online Database Password', url: 'https://drive.google.com/file/d/1t2GBJjmyI2Pk5_objWsqQwXuju6KhlFO/view' }
-      ]
+      catTh: 'ตรวจสอบเวลาว่าง',
+      catEn: 'Availability',
+      qTh: 'ตรวจสอบห้องหรือเวลาว่างได้อย่างไร?',
+      qEn: 'How can I check room and time availability?',
+      aTh: 'ดูตารางการจองในหน้านี้ แล้วเลือกวันที่และช่วงเวลาที่ยังว่างในแบบฟอร์ม หากมีผู้จองช่วงเวลานั้นไปก่อน ระบบจะแจ้งให้เลือกเวลาอื่น',
+      aEn: 'Check the booking schedule on this page, then select an available date and time in the form. If someone books the slot first, the system will ask you to choose another time.'
     },
     {
       id: 4,
-      catTh: 'เวลาทำการ',
-      catEn: 'Hours & Access',
-      qTh: 'เวลาเปิด-ปิดทำการของห้องสมุด?',
-      qEn: 'What are the library operating hours?',
-	    aTh: '⏰ **เวลาทำการของห้องสมุด วิทยาลัยเซนต์หลุยส์:**\n• **ห้องสมุดกลาง Saint Louis (ฝั่งโรงพยาบาล):**\n&nbsp;&nbsp; ทุกวัน 10:00 - 19:00 น.\n• **ห้องสมุดสาขา Saint Benedict (ฝั่งอาคารเรียน):**\n&nbsp;&nbsp; วันจันทร์ - วันศุกร์ 08:00 - 17:00 น.\n&nbsp;&nbsp; <span style=\"color: red;\">หมายเหตุ: * ปิดทำการในวันหยุดนักขัตฤกษ์ *</span> \n• **ปฏิทินห้องสมุด:** สามารถตรวจสอบวันหยุดและกิจกรรมได้ที่ลิงก์ด้านล่าง',
-      aEn: '⏰ **Library Operating Hours:**\n• **Central Library (Hospital Side):** Daily, 10:00 AM - 7:00 PM\n• **Saint Benedict (Academic Side):** Mon - Fri, 8:00 AM - 5:00 PM\n&nbsp;&nbsp;* Closed on Public Holidays * \n• **Library Calendar:** Check for holidays and events via the link below',
-      links: [
-          { titleTh: 'เว็บไซต์ห้องสมุด', titleEn: 'Library Website', url: 'https://library.slc.ac.th/' }
-        ]
+      catTh: 'เงื่อนไข',
+      catEn: 'Booking rules',
+      qTh: 'ถ้าวันที่เลือกปิดทำการหรือห้องไม่ว่างต้องทำอย่างไร?',
+      qEn: 'What if the room is closed or unavailable?',
+      aTh: 'เลือกวันหรือช่วงเวลาอื่น ระบบไม่อนุญาตให้จองช่วงเวลาที่ห้องปิดปรับปรุงหรือปิดทำการ',
+      aEn: 'Choose another date or time. The system does not allow bookings during room maintenance or closure.'
     },
     {
       id: 5,
-      catTh: 'วิทยานิพนธ์',
-      catEn: 'Theses & Dissertations',
-      qTh: 'ค้นหาวิทยานิพนธ์ฉบับเต็มของวิทยาลัยได้อย่างไร?',
-      qEn: 'How to access institutional theses full-text?',
-      aTh: '🎓 คุณสามารถสืบค้นและดาวน์โหลดวิทยานิพนธ์และงานนิพนธ์ฉบับเต็มได้ฟรี \nผ่านระบบ **คลังสารสนเทศดิจิทัล วิทยาลัยเซนต์หลุยส์ (SLC Digital Collection)** ตามลิงก์ด้านล่างนี้ครับ',
-      aEn: '🎓 Access and download full-text institutional dissertations via\n **The Saint Louis College Digital Collections (SLC Digital Collection)**:',
-      links: [
-        { titleTh: 'คลังสารสนเทศดิจิทัล (SLC Digital Collection)', titleEn: 'SLC Digital Collection', url: 'https://library.slc.ac.th/lib2025/nav3-1-1-d-collections.php' }
-      ]
+      catTh: 'ยกเลิกการจอง',
+      catEn: 'Cancel a booking',
+      qTh: 'ต้องการยกเลิกการจองทำอย่างไร?',
+      qEn: 'How do I cancel a booking?',
+      aTh: 'กรุณาแจ้งเจ้าหน้าที่ล่วงหน้าก่อนถึงเวลาใช้งาน ติดต่อผ่านช่องทางในเมนู **ติดต่อเจ้าหน้าที่**',
+      aEn: 'Please notify staff before your booking time using the channels in the **Contact staff** tab.'
     },
     {
       id: 6,
-      catTh: 'ฐานข้อมูลออนไลน์',
-      catEn: 'Databases',
-      qTh: 'ใช้งานฐานข้อมูลออนไลน์จากนอกวิทยาลัยได้อย่างไร?',
-      qEn: 'How to access online databases off-campus?',
-      aTh: '🌐 **การเข้าใช้งานฐานข้อมูลออนไลน์ (CINAHL, CU-eLibrary, IG Library, Scientific e-Resources):**\n1. เลือกฐานข้อมูลที่ต้องการจากหน้าเว็บไซต์ห้องสมุด\n2. เข้าสู่ระบบด้วยบัญชีของวิทยาลัย (ดูรหัสผ่านได้จากเอกสารคู่มือ)',
-      aEn: '🌐 **Accessing Online Databases (CINAHL, CU-eLibrary, IG Library, Scientific e-Resources):**\n1. Select your database from the library website\n2. Sign in using your college account credentials (refer to password guide)',
-      links: [
-        { titleTh: 'หน้ารวมฐานข้อมูล (Digital Resources)', titleEn: 'Digital Resources Portal', url: 'https://library.slc.ac.th/lib2025/nav1-1-e-databases.php' },
-        { titleTh: 'ดูรหัสผ่านฐานข้อมูล (Google Drive)', titleEn: 'View Database Passwords', url: 'https://drive.google.com/file/d/1t2GBJjmyI2Pk5_objWsqQwXuju6KhlFO/view?usp=sharing' }
-      ]
+      catTh: 'เลือกห้อง',
+      catEn: 'Choose a room',
+      qTh: 'มีห้องอะไรให้เลือกบ้าง?',
+      qEn: 'Which rooms are available?',
+      aTh: 'อาคาร Saint Louis มี Conference Room 1-3, Mini Theater Room และ Research Room ส่วนอาคาร Saint Benedict มี Conference Room 1-2 และ Multi-purpose Room',
+      aEn: 'Saint Louis has Conference Rooms 1-3, Mini Theater Room, and Research Room. Saint Benedict has Conference Rooms 1-2 and the Multi-purpose Room.'
     },
     {
       id: 7,
-      catTh: 'การยืมต่อ (Renew)',
-      catEn: 'Online Renewal',
-      qTh: 'การยืมหนังสือต่อออนไลน์ทำอย่างไร?',
-      qEn: 'How do I renew borrowed books online?',
-      aTh: '🔄 **ขั้นตอนการยืมต่อออนไลน์ด้วยตนเอง:**\n1. เข้าสู่ระบบ Web OPAC\n2. Log in ด้วยรหัสคณะ (เช่น Nu, Pt, Psy) ตามด้วยรหัสนักศึกษา/อาจารย์/บุคลากร\n3. ไปที่รายการหนังสือที่กำลังยืม แล้วคลิก **"Renew"**',
-      aEn: '🔄 **Online Renewal Steps:**\n1. Go to the Web OPAC system\n2. Log in with faculty prefix (Nu, Pt, Psy) followed by ID number\n3. Select your borrowed items and click **"Renew"**',
-      links: [
-        { titleTh: 'เข้าสู่ระบบ Web OPAC', titleEn: 'Web OPAC System', url: 'http://slclib.slc.ac.th/' },
-        { titleTh: 'คู่มือการยืมต่อ', titleEn: 'Online Renewal Guide', url: 'https://library.slc.ac.th/lib2025/guides_training_detail.php?id=8' }
-      ]
+      catTh: 'แก้ปัญหา',
+      catEn: 'Troubleshooting',
+      qTh: 'ระบบแจ้งว่าช่วงเวลาถูกจองแล้วต้องทำอย่างไร?',
+      qEn: 'What if the selected time was just booked?',
+      aTh: 'อาจมีผู้ใช้จองช่วงเวลานั้นพร้อมกัน กรุณาเลือกช่วงเวลาอื่นที่ยังว่างแล้วส่งคำขอใหม่',
+      aEn: 'Another user may have booked that time at the same moment. Select another available slot and submit your booking again.'
     }
   ];
 
-  // Resources Tab Data
   const RESOURCES = [
     {
       id: 1,
-      titleTh: 'Web OPAC ระบบสืบค้นหนังสือ',
-      titleEn: 'Web OPAC (Library Catalog)',
-      descTh: 'สืบค้นหนังสือ สิ่งพิมพ์ และสื่อการเรียนรู้ในห้องสมุด',
-      descEn: 'Search books, periodicals, and media in the library.',
-      url: 'http://slclib.slc.ac.th/',
-      query: 'สืบค้นหนังสือได้อย่างไร'
-    },
-    {
-      id: 2,
-      titleTh: 'SLC Digital Collection',
-      titleEn: 'SLC Digital Collection',
-      descTh: 'คลังสารสนเทศและวิทยานิพนธ์ดิจิทัลฉบับเต็ม',
-      descEn: 'Institutional Repository and full-text theses.',
-      url: 'https://library.slc.ac.th/lib2025/nav3-1-1-d-collections.php',
-      query: 'วิทยานิพนธ์ฉบับเต็ม'
-    },
-    {
-      id: 3,
-      titleTh: 'Citation Guide APA 7th',
-      titleEn: 'Citation Guide APA 7th',
-      descTh: 'คู่มือแนะนำการเขียนบรรณานุกรมฉบับสมบูรณ์',
-      descEn: 'Bibliography and reference formatting guide.',
-      url: 'https://drive.google.com/file/d/1NL3hV9xEMXdVDP6elCORzsMWkVgvCvdp/view',
-      query: 'คู่มือการเขียนบรรณานุกรม APA 7th'
-    },
-    {
-      id: 4,
-      titleTh: 'CINAHL Database',
-      titleEn: 'CINAHL Database',
-      descTh: 'ฐานข้อมูลการวิจัยด้านสุขภาพ',
-      descEn: 'Health science research database.',
-      url: 'https://research.ebsco.com/c/f26r7l/search',
-      query: 'ฐานข้อมูล CINAHL'
-    },
-    {
-      id: 5,
-      titleTh: 'CU-eLibrary',
-      titleEn: 'CU-eLibrary',
-      descTh: 'โดยศูนย์หนังสือจุฬาลงกรณ์มหาวิทยาลัย',
-      descEn: 'Provided by Chulalongkorn University Book Center.',
-      url: 'https://elibrary-slclibrary.cu-elibrary.com/',
-      query: 'CU-eLibrary'
-    },
-    {
-      id: 6,
-      titleTh: 'iG Library',
-      titleEn: 'iG Library',
-      descTh: 'พัฒนาโดย iG Publishing',
-      descEn: 'iG Publishing eBook Platform.',
-      url: 'https://portal.igpublish.com/search',
-      query: 'iG Library'
-    },
-    {
-      id: 7,
-      titleTh: 'Scientific e - Resources',
-      titleEn: 'Scientific e - Resources',
-      descTh: 'คลังทรัพยากรวิทยาศาสตร์ดิจิทัล',
-      descEn: 'Digital scientific resources repository.',
-      url: 'https://ser-infotech.com/',
-      query: 'Scientific e - Resources'
-    },
-    {
-      id: 8,
-      titleTh: 'ThaiLis',
-      titleEn: 'ThaiLis',
-      descTh: 'ฐานข้อมูลเอกสารฉบับเต็มในรูปแบบอิเล็กทรอนิกส์',
-      descEn: 'Thai Digital Collection.',
-      url: 'https://tdc.thailis.or.th/tdc/basic.php',
-      query: 'ThaiLis'
+      titleTh: 'ไปยังแบบฟอร์มจองห้อง',
+      titleEn: 'Go to the booking form',
+      descTh: 'เลือกอาคาร ห้อง วันที่ และช่วงเวลาที่ต้องการ',
+      descEn: 'Choose a building, room, date, and time slot.',
+      url: '#bookingForm'
     },
   ];
 
@@ -384,7 +343,7 @@
   let currentLang = 'th';
   let isWidgetOpen = false;
   let isFaqOpen = false;
-  let currentView = 'chat'; // 'chat' | 'resources' | 'librarian' | 'guide'
+  let currentView = 'chat';
 
 
   container.innerHTML = `
@@ -398,20 +357,17 @@
       <span id="lumi-prompt-text">ต้องการความช่วยเหลือ? เรียก Lumi </span>
     </button>
 
-    <!-- Floating Trigger Bubble Button -->
+    <!-- Floating Lumi PodCare-style mascot button -->
     <button 
       id="lumi-floating-trigger"
-      class="p-3.5 rounded-full bg-blue-900 hover:bg-blue-800 text-white shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 ring-4 ring-blue-900/20 border-2 border-white flex items-center gap-3 cursor-pointer select-none"
-      title="ถามน้องลูมิ (Lumi Library AI)"
+      type="button"
+      class="w-[76px] h-[76px] sm:w-[84px] sm:h-[84px] p-1.5 rounded-full bg-white shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 ring-4 ring-blue-900/15 border-2 border-blue-100 flex items-center justify-center cursor-pointer select-none"
+      title="ถามน้องลูมิ (Lumi Room Booking Assistant)"
       aria-label="เปิดผู้ช่วย Lumi"
     >
-      <div class="relative w-10 h-10 flex items-center justify-center bg-blue-700 rounded-full p-0.5 shadow-xs ">
+      <div class="relative w-full h-full flex items-center justify-center rounded-full bg-blue-50 p-0.5">
         <img id="lumi-mascot-avatar" src="${new URL('lumi-waving.png', lumiAssetBase).href}" alt="" class="w-full h-full object-contain">
-        <div class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border-2 border-blue-900"></div>
-      </div>
-      <div class="hidden sm:flex flex-col text-left pr-2">
-        <span class="text-sm font-bold font-prompt leading-tight text-white">ถามน้องลูมิ (Lumi AI)</span>
-        <span class="text-[10px] text-blue-200 uppercase tracking-widest font-semibold">SLC Library</span>
+        <div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-white"></div>
       </div>
     </button>
 
@@ -421,7 +377,7 @@
       class="hidden w-[94vw] sm:w-[480px] md:w-[680px] lg:w-[740px] h-[86vh] max-h-[740px] bg-white text-slate-800 shadow-2xl border border-slate-200 ring-4 ring-blue-900/10 rounded-3xl overflow-hidden flex flex-row transition-all duration-300 select-text"
     >
       <!-- 1. LEFT ICON SIDEBAR (Symmetrical, Single Purpose: Navigation & Actions) -->
-      <aside class="w-14 sm:w-16 bg-slate-900 border-r border-slate-800 flex flex-col items-center py-4 justify-between select-none z-20 flex-shrink-0">
+      <aside class="w-14 sm:w-16 bg-[#0D2535] border-r border-slate-800 flex flex-col items-center py-4 justify-between select-none z-20 flex-shrink-0">
         <div class="flex flex-col items-center gap-3 w-full">
         
 
@@ -451,16 +407,16 @@
           <button 
             id="lumi-tab-resources-btn"
             class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
-            title="ทรัพยากรห้องสมุด / Resources"
+            title="เริ่มจองห้อง / Start booking"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
           </button>
 
-          <!-- 4. Ask a Librarian Tab -->
+          <!-- 4. Booking Contact Tab -->
           <button 
             id="lumi-tab-librarian-btn"
             class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
-            title="ติดต่อบรรณารักษ์ / Ask a Librarian"
+            title="ติดต่อเจ้าหน้าที่เรื่องการจอง / Contact booking staff"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 18v-6a9 9 0 0118 0v6"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>
           </button>
@@ -469,7 +425,7 @@
           <button 
             id="lumi-tab-guide-btn"
             class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
-            title="ระเบียบและเวลาทำการ / Guide"
+            title="เงื่อนไขการจอง / Booking rules"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
           </button>
@@ -488,23 +444,23 @@
       <!-- 2. MAIN CHAT / CONTENT BODY -->
       <main class="flex-1 flex flex-col h-full bg-slate-50 relative min-w-0">
         <!-- Top App Bar Header (Deep Blue header, Symmetrical distribution) -->
-        <header class="bg-blue-900 text-white px-4 sm:px-5 py-3.5 sm:py-4 flex items-center justify-between flex-shrink-0 shadow-md">
+        <header class="bg-[#0D2535] text-white px-4 sm:px-5 py-3.5 sm:py-4 flex items-center justify-between flex-shrink-0 shadow-md">
           <!-- Left: Avatar + Title + Organization -->
           <div class="flex items-center gap-3 min-w-0">
-            <div class="relative w-10 h-10 sm:w-11 sm:h-11 bg-[#D9822B] rounded-full flex items-center justify-center p-0.5 shadow-xs flex-shrink-0">
+            <div class="relative w-10 h-10 sm:w-11 sm:h-11 bg-[#5388D8] rounded-full flex items-center justify-center p-0.5 shadow-xs flex-shrink-0">
               <img id="lumi-chat-avatar" src="${new URL('lumi-happy.png', lumiAssetBase).href}" alt="" class="w-full h-full object-contain">
               <div class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border-2 border-blue-900"></div>
             </div>
             <div class="min-w-0">
               <h3 id="lumi-header-title" class="font-prompt font-bold text-sm sm:text-base text-white tracking-tight truncate">Lumi (ลูมิ)</h3>
-              <p id="lumi-header-status" class="text-[10px] sm:text-[11px] text-blue-200 font-medium truncate mt-0.5">ห้องสมุดวิทยาลัยเซนต์หลุยส์ • Saint Louis College</p>
+              <p id="lumi-header-status" class="text-[10px] sm:text-[11px] text-blue-200 font-medium truncate mt-0.5">ผู้ช่วยระบบจองห้องประชุม</p>
             </div>
           </div>
 
           <!-- Right: ONLY ONE Language Switcher + Window Actions -->
           <div class="flex items-center gap-2 flex-shrink-0">
             <!-- Segmented TH / EN Switcher (Single source of truth) -->
-            <div class="flex items-center bg-blue-950/40 p-1 rounded-xl border border-blue-700/50">
+            <div class="flex items-center bg-[#0D2535] p-1 rounded-xl border border-slate-600">
               <button id="lumi-seg-th" class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all bg-white text-blue-900 shadow-xs cursor-pointer">TH</button>
               <button id="lumi-seg-en" class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all text-blue-200 hover:text-white cursor-pointer">EN</button>
             </div>
@@ -535,10 +491,10 @@
                   </div>
                   <div>
                     <h2 id="lumi-hero-title" class="font-prompt font-bold text-sm sm:text-base text-slate-800 leading-snug">
-                      สวัสดีครับ 😊 น้องลูมิ ผู้ช่วย AI ห้องสมุดวิทยาลัยเซนต์หลุยส์
+                    สวัสดีครับ 😊 ลูมิช่วยตอบคำถามเกี่ยวกับการจองห้องประชุม
                     </h2>
                     <p id="lumi-hero-sub" class="text-xs sm:text-[13px] text-slate-600 mt-0.5 leading-relaxed">
-                      ยินดีให้คำแนะนำเกี่ยวกับบริการต่างๆของห้องสมุดครับ~
+                      ถามวิธีจอง การเลือกห้อง เงื่อนไข และปัญหาการจองได้เลยครับ
                     </p>
                   </div>
                 </div>
@@ -546,60 +502,60 @@
                 <!-- Symmetrical 2-Column Quick Access Grid -->
                 <div class="mt-3.5">
                   <span id="lumi-quick-label" class="text-[11px] font-bold text-blue-900 font-prompt block mb-2.5 uppercase tracking-wider">
-                    ⚡ บริการยอดนิยม (Quick Access)
+                    ⚡ ช่วยเรื่องการจอง (Booking Help)
                   </span>
 
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
-                    <!-- Item 1: Room Booking -->
-                    <button onclick="window.LumiWidget.sendQuickMessage('ขอจองห้องประชุม', 'How can I book a meeting room?')" class="text-left p-3 rounded-xl bg-slate-50/80 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 transition-all flex items-center justify-between group cursor-pointer shadow-2xs">
+                    <!-- Item 1: Booking steps -->
+                    <button onclick="window.LumiWidget.sendQuickMessage('จองห้องอย่างไร', 'How do I book a room?')" class="text-left p-3 rounded-xl bg-slate-50/80 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 transition-all flex items-center justify-between group cursor-pointer shadow-2xs">
                       <div class="flex items-center gap-2 min-w-0 pr-1">
                         <span class="text-base flex-shrink-0">🏢</span>
-                        <span class="text-xs sm:text-[13px] text-slate-700 font-medium group-hover:text-blue-900 truncate lumi-quick-1">ขอจองห้องประชุม</span>
+                        <span class="text-xs sm:text-[13px] text-slate-700 font-medium group-hover:text-blue-900 truncate lumi-quick-1">วิธีจองห้องประชุม</span>
                       </div>
-                      <span class="px-2 py-0.5 text-[9px] font-bold bg-blue-100 text-blue-900 border border-blue-200 rounded-full flex-shrink-0">ยอดนิยม</span>
+                      <span class="px-2 py-0.5 text-[9px] font-bold bg-blue-100 text-blue-900 border border-blue-200 rounded-full flex-shrink-0">เริ่มต้น</span>
                     </button>
 
-                    <!-- Item 2: Borrowing Period -->
-                    <button onclick="window.LumiWidget.sendQuickMessage('ยืมหนังสือได้กี่วัน', 'How long can I borrow books?')" class="text-left p-3 rounded-xl bg-slate-50/80 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 transition-all flex items-center justify-between group cursor-pointer shadow-2xs">
+                    <!-- Item 2: Booking duration -->
+                    <button onclick="window.LumiWidget.sendQuickMessage('จองได้นานเท่าไร', 'What is the maximum booking duration?')" class="text-left p-3 rounded-xl bg-slate-50/80 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 transition-all flex items-center justify-between group cursor-pointer shadow-2xs">
                       <div class="flex items-center gap-2 min-w-0 pr-1">
-                        <span class="text-base flex-shrink-0">📚</span>
-                        <span class="text-xs sm:text-[13px] text-slate-700 font-medium group-hover:text-blue-900 truncate lumi-quick-2">ยืมหนังสือได้กี่วัน</span>
+                        <span class="text-base flex-shrink-0">⏱️</span>
+                        <span class="text-xs sm:text-[13px] text-slate-700 font-medium group-hover:text-blue-900 truncate lumi-quick-2">จองได้นานเท่าไร</span>
                       </div>
-                      <span class="px-2 py-0.5 text-[9px] font-bold bg-slate-200/80 text-slate-700 rounded-full flex-shrink-0">ระเบียบ</span>
+                      <span class="px-2 py-0.5 text-[9px] font-bold bg-slate-200/80 text-slate-700 rounded-full flex-shrink-0">เงื่อนไข</span>
                     </button>
 
-                    <!-- Item 3: Library Hours -->
-                    <button onclick="window.LumiWidget.sendQuickMessage('วันเวลาทำการของห้องสมุด', 'What are the library opening hours?')" class="text-left p-3 rounded-xl bg-slate-50/80 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 transition-all flex items-center justify-between group cursor-pointer shadow-2xs">
+                    <!-- Item 3: Room availability -->
+                    <button onclick="window.LumiWidget.sendQuickMessage('ตรวจสอบเวลาว่าง', 'How can I check room and time availability?')" class="text-left p-3 rounded-xl bg-slate-50/80 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 transition-all flex items-center justify-between group cursor-pointer shadow-2xs">
                       <div class="flex items-center gap-2 min-w-0 pr-1">
-                        <span class="text-base flex-shrink-0">⏰</span>
-                        <span class="text-xs sm:text-[13px] text-slate-700 font-medium group-hover:text-blue-900 truncate lumi-quick-3">วันเวลาทำการของห้องสมุด</span>
+                        <span class="text-base flex-shrink-0">📅</span>
+                        <span class="text-xs sm:text-[13px] text-slate-700 font-medium group-hover:text-blue-900 truncate lumi-quick-3">ตรวจสอบเวลาว่าง</span>
                       </div>
-                      <span class="px-2 py-0.5 text-[9px] font-bold bg-slate-200/80 text-slate-700 rounded-full flex-shrink-0">เวลาทำการ</span>
+                      <span class="px-2 py-0.5 text-[9px] font-bold bg-slate-200/80 text-slate-700 rounded-full flex-shrink-0">ตารางจอง</span>
                     </button>
 
-                    <!-- Item 4: Book Search -->
-                    <button onclick="window.LumiWidget.sendQuickMessage('สืบค้นหนังสือได้อย่างไร', 'How do I search for books in the catalog?')" class="text-left p-3 rounded-xl bg-slate-50/80 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 transition-all flex items-center justify-between group cursor-pointer shadow-2xs">
+                    <!-- Item 4: Rooms -->
+                    <button onclick="window.LumiWidget.sendQuickMessage('มีห้องอะไรให้เลือกบ้าง', 'Which rooms are available?')" class="text-left p-3 rounded-xl bg-slate-50/80 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 transition-all flex items-center justify-between group cursor-pointer shadow-2xs">
                       <div class="flex items-center gap-2 min-w-0 pr-1">
-                        <span class="text-base flex-shrink-0">🔍</span>
-                        <span class="text-xs sm:text-[13px] text-slate-700 font-medium group-hover:text-blue-900 truncate lumi-quick-4">สืบค้นหนังสือได้อย่างไร</span>
+                        <span class="text-base flex-shrink-0">🚪</span>
+                        <span class="text-xs sm:text-[13px] text-slate-700 font-medium group-hover:text-blue-900 truncate lumi-quick-4">มีห้องอะไรให้เลือกบ้าง</span>
                       </div>
-                      <span class="px-2 py-0.5 text-[9px] font-bold bg-slate-200/80 text-slate-700 rounded-full flex-shrink-0">Web OPAC</span>
+                      <span class="px-2 py-0.5 text-[9px] font-bold bg-slate-200/80 text-slate-700 rounded-full flex-shrink-0">ห้องประชุม</span>
                     </button>
 
-                    <!-- Item 5: Databases -->
-                    <button onclick="window.LumiWidget.sendQuickMessage('ฐานข้อมูลมีอะไรบ้าง', 'What online databases are available?')" class="text-left p-3 rounded-xl bg-slate-50/80 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 transition-all flex items-center justify-between group cursor-pointer shadow-2xs">
+                    <!-- Item 5: Booking cancellation -->
+                    <button onclick="window.LumiWidget.sendQuickMessage('ยกเลิกการจองอย่างไร', 'How do I cancel a booking?')" class="text-left p-3 rounded-xl bg-slate-50/80 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 transition-all flex items-center justify-between group cursor-pointer shadow-2xs">
                       <div class="flex items-center gap-2 min-w-0 pr-1">
-                        <span class="text-base flex-shrink-0">🌐</span>
-                        <span class="text-xs sm:text-[13px] text-slate-700 font-medium group-hover:text-blue-900 truncate lumi-quick-5">ฐานข้อมูลมีอะไรบ้าง</span>
+                        <span class="text-base flex-shrink-0">☎️</span>
+                        <span class="text-xs sm:text-[13px] text-slate-700 font-medium group-hover:text-blue-900 truncate lumi-quick-5">ยกเลิกการจองอย่างไร</span>
                       </div>
-                      <span class="px-2 py-0.5 text-[9px] font-bold bg-slate-200/80 text-slate-700 rounded-full flex-shrink-0">ฐานข้อมูล</span>
+                      <span class="px-2 py-0.5 text-[9px] font-bold bg-slate-200/80 text-slate-700 rounded-full flex-shrink-0">ติดต่อเจ้าหน้าที่</span>
                     </button>
 
                     <!-- Item 6: View All FAQs (Symmetrical Grid Completion) -->
                     <button id="lumi-hero-faqs-link" class="text-left p-3 rounded-xl bg-blue-50/70 hover:bg-blue-100/80 border border-blue-200 transition-all flex items-center justify-between group cursor-pointer shadow-2xs">
                       <div class="flex items-center gap-2 min-w-0 pr-1">
                         <span class="text-base flex-shrink-0">❓</span>
-                        <span id="lumi-view-all-label" class="text-xs sm:text-[13px] text-blue-900 font-semibold truncate">ดูคำถามที่พบบ่อยทั้งหมด</span>
+                        <span id="lumi-view-all-label" class="text-xs sm:text-[13px] text-blue-900 font-semibold truncate">ดูคำถามเกี่ยวกับการจอง</span>
                       </div>
                       <svg class="w-4 h-4 text-blue-900 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </button>
@@ -619,7 +575,7 @@
                   <span class="w-1.5 h-1.5 rounded-full bg-blue-900 animate-bounce" style="animation-delay: 0ms"></span>
                   <span class="w-1.5 h-1.5 rounded-full bg-blue-900 animate-bounce" style="animation-delay: 150ms"></span>
                   <span class="w-1.5 h-1.5 rounded-full bg-blue-900 animate-bounce" style="animation-delay: 300ms"></span>
-                  <span id="lumi-typing-text" class="ml-1 text-slate-500 font-medium">น้องลูมิกำลังค้นหาข้อมูลห้องสมุด...</span>
+                  <span id="lumi-typing-text" class="ml-1 text-slate-500 font-medium">ลูมิกำลังช่วยเรื่องการจอง...</span>
                 </div>
               </div>
             </div>
@@ -647,7 +603,7 @@
               </button>
               </form>
               <div class="text-center mt-1.5">
-                <span class="text-[9px] text-slate-400 font-medium">Lumi Library AI • งานวิทยบริการและวารสารวิชาการ วิทยาลัยเซนต์หลุยส์</span>
+                <span class="text-[9px] text-slate-400 font-medium">Lumi • ผู้ช่วยระบบจองห้องประชุม</span>
               </div>
             </div>
           </div>
@@ -678,7 +634,7 @@
               <input 
                 type="text" 
                 id="lumi-faq-search-input"
-                placeholder="ค้นหาคำถาม เช่น ยืมหนังสือ, จองห้องประชุม, วิทยานิพนธ์, ฐานข้อมูล..."
+                placeholder="ค้นหาคำถามเกี่ยวกับการจองห้อง..."
                 class="w-full pl-10 pr-4 py-2.5 bg-white text-xs sm:text-sm text-slate-800 placeholder-slate-400 rounded-2xl border border-slate-200 focus:outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-900/10 shadow-2xs"
               />
             </div>
@@ -699,8 +655,8 @@
         <div id="lumi-resources-view" class="hidden flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50">
           <div class="max-w-2xl mx-auto w-full space-y-4">
             <div class="border-b border-slate-200 pb-3">
-              <h3 id="lumi-resources-title" class="font-prompt font-bold text-base sm:text-lg text-slate-800">ทรัพยากรและบริการห้องสมุด</h3>
-              <p id="lumi-resources-sub" class="text-xs text-slate-500 mt-0.5">เข้าถึงสิ่งพิมพ์, e-resources, ฐานข้อมูล, และบริการต่างๆ ของวิทยาลัยเซนต์หลุยส์</p>
+              <h3 id="lumi-resources-title" class="font-prompt font-bold text-base sm:text-lg text-slate-800">เริ่มจองห้อง</h3>
+              <p id="lumi-resources-sub" class="text-xs text-slate-500 mt-0.5">ไปยังแบบฟอร์มเพื่อเลือกห้อง วันที่ และเวลา</p>
             </div>
             <div id="lumi-resources-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <!-- Populated by JS -->
@@ -708,12 +664,12 @@
           </div>
         </div>
 
-        <!-- ASK A LIBRARIAN VIEW -->
+        <!-- BOOKING CONTACT VIEW -->
         <div id="lumi-librarian-view" class="hidden flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50">
           <div class="max-w-2xl mx-auto w-full space-y-4">
             <div class="border-b border-slate-200 pb-3">
-              <h3 id="lumi-librarian-title" class="font-prompt font-bold text-base sm:text-lg text-slate-800">ติดต่อบรรณารักษ์</h3>
-              <p id="lumi-librarian-sub" class="text-xs text-slate-500 mt-0.5">ช่องทางติดต่อเจ้าหน้าที่งานวิทยบริการโดยตรง</p>
+              <h3 id="lumi-librarian-title" class="font-prompt font-bold text-base sm:text-lg text-slate-800">ติดต่อเจ้าหน้าที่เรื่องการจอง</h3>
+              <p id="lumi-librarian-sub" class="text-xs text-slate-500 mt-0.5">สอบถามหรือแจ้งยกเลิกการจองห้องประชุม</p>
             </div>
             <div id="lumi-librarian-content" class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs space-y-4">
               <!-- Populated by JS -->
@@ -725,8 +681,8 @@
         <div id="lumi-guide-view" class="hidden flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50">
           <div class="max-w-2xl mx-auto w-full space-y-4">
             <div class="border-b border-slate-200 pb-3">
-              <h3 id="lumi-guide-title" class="font-prompt font-bold text-base sm:text-lg text-slate-800">ระเบียบและเวลาทำการของห้องสมุด</h3>
-              <p class="text-xs text-slate-500 mt-0.5">ข้อมูลเวลาเปิด-ปิด และระเบียบการยืมคืนหนังสือ</p>
+              <h3 id="lumi-guide-title" class="font-prompt font-bold text-base sm:text-lg text-slate-800">เงื่อนไขการใช้ห้องประชุม</h3>
+              <p class="text-xs text-slate-500 mt-0.5">ข้อมูลสำคัญก่อนส่งรายการจอง</p>
             </div>
             <div id="lumi-guide-content" class="space-y-3 text-xs sm:text-[13px]">
               <!-- Populated by JS -->
@@ -765,12 +721,10 @@
   let selectedFaqCategory = 'all';
 
   const FAQ_CATEGORIES = [
-    { id: 'all', nameTh: 'ทั้งหมด', nameEn: 'All Topics' },
-    { id: 'borrow', nameTh: 'การยืม-คืน & เวลา', nameEn: 'Borrowing & Hours' },
-    { id: 'room', nameTh: 'จองห้องประชุม', nameEn: 'Room Booking' },
-    { id: 'theses', nameTh: 'วิทยานิพนธ์', nameEn: 'Theses & IR' },
-    { id: 'databases', nameTh: 'ฐานข้อมูล & OPAC', nameEn: 'Databases & OPAC' },
-    { id: 'service', nameTh: 'บริการห้องสมุด', nameEn: 'Services' }
+    { id: 'all', nameTh: 'ทั้งหมด', nameEn: 'All questions' },
+    { id: 'booking', nameTh: 'วิธีจอง', nameEn: 'How to book' },
+    { id: 'rules', nameTh: 'เงื่อนไข', nameEn: 'Booking rules' },
+    { id: 'availability', nameTh: 'ห้องและเวลาว่าง', nameEn: 'Rooms & availability' }
   ];
 
   const tabButtons = {
@@ -783,6 +737,9 @@
 
   let promptIntervalId;
   let promptTimeoutId;
+  let mascotMoodIntervalId;
+  let mascotMoodIndex = 0;
+  const mascotMoods = ['waving', 'happy', 'thinking', 'smart', 'surprised', 'sleepy'];
 
   function setMascotMood(mood) {
     const imageUrl = new URL(`lumi-${mood}.png`, lumiAssetBase).href;
@@ -818,10 +775,27 @@
     hidePromptBubble();
   }
 
+  function startMascotMoodCycle() {
+    if (mascotMoodIntervalId) return;
+    mascotMoodIntervalId = setInterval(() => {
+      if (isWidgetOpen) return;
+      mascotMoodIndex = (mascotMoodIndex + 1) % mascotMoods.length;
+      setMascotMood(mascotMoods[mascotMoodIndex]);
+    }, 5000);
+  }
+
+  function stopMascotMoodCycle() {
+    if (mascotMoodIntervalId) {
+      clearInterval(mascotMoodIntervalId);
+      mascotMoodIntervalId = undefined;
+    }
+  }
+
 
   function openWidget() {
     isWidgetOpen = true;
     stopPromptCycle();
+    stopMascotMoodCycle();
     setMascotMood('happy');
     floatingBtn.classList.add('hidden');
     mainWindow.classList.remove('hidden');
@@ -830,10 +804,12 @@
 
   function closeWidget() {
     isWidgetOpen = false;
+    mascotMoodIndex = 0;
     setMascotMood('waving');
     mainWindow.classList.add('hidden');
     floatingBtn.classList.remove('hidden');
     startPromptCycle();
+    startMascotMoodCycle();
   }
 
   function toggleWidget() {
@@ -876,8 +852,8 @@
           <p class="text-[11px] sm:text-xs text-slate-500 mt-1 leading-relaxed text-center">${isTh ? r.descTh : r.descEn}</p>
         </div>
         <div class="mt-3.5 flex flex-col gap-1.5">
-          <a href="${r.url}" target="_blank" rel="noreferrer" class="w-full py-2 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
-            <span>${isTh ? 'เปิดเว็บไซต์โดยตรง' : 'Open Direct Link'}</span>
+          <a href="${r.url}" class="w-full py-2 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+            <span>${isTh ? 'ไปยังแบบฟอร์มจอง' : 'Open booking form'}</span>
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
           </a>
         </div>
@@ -914,8 +890,8 @@
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 18v-6a9 9 0 0118 0v6"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>
         </div>
         <div>
-          <h4 class="text-sm sm:text-base font-bold text-slate-800 font-prompt">${isTh ? 'งานวิทยบริการและวารสารวิชาการ วิทยาลัยเซนต์หลุยส์' : 'Library, Saint Louis College'}</h4>
-          <p class="text-xs text-slate-500">${isTh ? 'พร้อมให้บริการและตอบคำถามแก่นักศึกษาและบุคลากร' : 'Ready to support students, faculty, and staff'}</p>
+          <h4 class="text-sm sm:text-base font-bold text-slate-800 font-prompt">${isTh ? 'ติดต่อเจ้าหน้าที่เรื่องการจองห้อง' : 'Room booking support'}</h4>
+          <p class="text-xs text-slate-500">${isTh ? 'สอบถามรายละเอียดหรือแจ้งยกเลิกการจอง' : 'Ask about a reservation or request a cancellation'}</p>
         </div>
       </div>
 
@@ -943,6 +919,37 @@
 
   function renderGuideContent() {
     const isTh = currentLang === 'th';
+    const bookingRules = isTh
+      ? [
+          'เลือกอาคารและห้องจากรายการในแบบฟอร์ม ระบบจะแสดงเฉพาะห้องของอาคารที่เลือก',
+          'เลือกวันที่เพื่อดูเวลาเปิดให้จอง แล้วเลือกเวลาเริ่มต้นและสิ้นสุดที่ยังว่าง',
+          'จองได้สูงสุด 2 ชั่วโมงต่อคนต่อวัน',
+          'ห้องที่ปิดทำการหรือปิดปรับปรุงจะไม่สามารถจองได้',
+          'หากต้องการยกเลิก กรุณาแจ้งเจ้าหน้าที่ล่วงหน้าก่อนเวลาใช้งาน'
+        ]
+      : [
+          'Choose a building and room in the form. Only rooms in the selected building are shown.',
+          'Choose a date to see bookable times, then select an available start and end time.',
+          'Bookings are limited to 2 hours per person per day.',
+          'Rooms marked closed or under maintenance cannot be booked.',
+          'To cancel, notify staff before your scheduled booking time.'
+        ];
+
+    guideContent.innerHTML = `
+      <div class="p-4 bg-white rounded-2xl border border-slate-200/90 shadow-xs">
+        <h4 class="font-bold text-slate-800 font-prompt flex items-center gap-2 mb-3 text-sm">
+          ${isTh ? 'ก่อนส่งรายการจอง' : 'Before submitting a booking'}
+        </h4>
+        <ol class="space-y-2 text-slate-600 leading-relaxed list-decimal pl-5">
+          ${bookingRules.map(rule => `<li>${rule}</li>`).join('')}
+        </ol>
+        <a href="#bookingForm" class="mt-4 inline-flex items-center justify-center px-4 py-2 rounded-xl bg-blue-900 hover:bg-blue-800 text-white text-xs font-semibold">
+          ${isTh ? 'ไปยังแบบฟอร์มจอง' : 'Go to booking form'}
+        </a>
+      </div>
+    `;
+    return;
+
     const dyn = getDynamicAdminData();
     const h = (dyn && dyn.hours) ? dyn.hours : {
       centralTh: 'ทุกวัน 10:00 - 19:00 น.',
@@ -1010,54 +1017,54 @@
       segTh.className = 'px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all text-blue-200 hover:text-white cursor-pointer';
     }
 
-    document.getElementById('lumi-header-title').innerText = isTh ? 'Lumi (ลูมิ)' : 'Lumi Library AI';
-    document.getElementById('lumi-header-status').innerText = isTh ? 'ห้องสมุดวิทยาลัยเซนต์หลุยส์ • Saint Louis College' : 'Saint Louis College Library • Central Portal';
+    document.getElementById('lumi-header-title').innerText = isTh ? 'Lumi (ลูมิ)' : 'Lumi Room Booking';
+    document.getElementById('lumi-header-status').innerText = isTh ? 'ผู้ช่วยระบบจองห้องประชุม' : 'Meeting room booking assistant';
 
     document.getElementById('lumi-hero-title').innerText = isTh 
-      ? 'สวัสดีครับ! น้องลูมิ ผู้ช่วย AI ห้องสมุดวิทยาลัยเซนต์หลุยส์'
-      : 'Hello! I am Lumi, Saint Louis College Library AI Assistant';
+      ? 'สวัสดีครับ 😊 ลูมิช่วยตอบคำถามเกี่ยวกับการจองห้องประชุม'
+      : 'Hello! Lumi can help with meeting room bookings';
     document.getElementById('lumi-hero-sub').innerText = isTh
-      ? 'ยินดีให้คำแนะนำข้อมูล ยืม-คืน, จองห้องประชุม, สืบค้นหนังสือ และบริการต่างๆ ครับ~'
-      : 'Ready to help with borrowing rules, room booking, catalog search, and databases~';
+      ? 'ถามวิธีจอง การเลือกห้อง เงื่อนไข และปัญหาการจองได้เลยครับ'
+      : 'Ask about booking steps, rooms, rules, and reservation issues.';
 
-    document.getElementById('lumi-quick-label').innerText = isTh ? '⚡ บริการยอดนิยม (Quick Access)' : '⚡ Quick Access';
-    document.getElementById('lumi-view-all-label').innerText = isTh ? 'ดูคำถามที่พบบ่อยทั้งหมด' : 'View All FAQs';
+    document.getElementById('lumi-quick-label').innerText = isTh ? '⚡ ช่วยเรื่องการจอง' : '⚡ Booking help';
+    document.getElementById('lumi-view-all-label').innerText = isTh ? 'ดูคำถามเกี่ยวกับการจอง' : 'View booking FAQs';
     
     const faqViewTitle = document.getElementById('lumi-faq-view-title');
     if (faqViewTitle) {
-      faqViewTitle.firstElementChild.innerText = isTh ? 'คำถามที่พบบ่อย (FAQs)' : 'Frequently Asked Questions';
+      faqViewTitle.firstElementChild.innerText = isTh ? 'คำถามเกี่ยวกับการจองห้อง' : 'Room booking FAQs';
     }
     const faqViewSub = document.getElementById('lumi-faq-view-sub');
     if (faqViewSub) {
-      faqViewSub.innerText = isTh ? 'คลิกเลือกคำถามเพื่อให้ระบบถามน้องลูมิในแชททันที' : 'Select any question to ask Lumi directly in chat';
+      faqViewSub.innerText = isTh ? 'เลือกคำถามเพื่อดูคำแนะนำจากลูมิ' : 'Choose a question to get help from Lumi';
     }
     const faqBackLabel = document.getElementById('lumi-faq-back-label');
     if (faqBackLabel) {
       faqBackLabel.innerText = isTh ? 'กลับไปที่แชท' : 'Back to Chat';
     }
     if (faqSearchInput) {
-      faqSearchInput.placeholder = isTh ? 'ค้นหาคำถาม เช่น ยืมหนังสือ, จองห้องประชุม, วิทยานิพนธ์, ฐานข้อมูล...' : 'Search questions or library services...';
+      faqSearchInput.placeholder = isTh ? 'ค้นหาคำถามเกี่ยวกับการจองห้อง...' : 'Search room booking questions...';
     }
 
-    document.getElementById('lumi-chat-input').placeholder = isTh ? 'พิมพ์ข้อความเพื่อสอบถามน้องลูมิ...' : 'Type your question here...';
-    document.getElementById('lumi-typing-text').innerText = isTh ? 'น้องลูมิกำลังค้นหาข้อมูลห้องสมุด...' : 'Lumi is searching library database...';
+    document.getElementById('lumi-chat-input').placeholder = isTh ? 'ถามเกี่ยวกับการจองห้องประชุม...' : 'Ask about room bookings...';
+    document.getElementById('lumi-typing-text').innerText = isTh ? 'ลูมิกำลังช่วยเรื่องการจอง...' : 'Lumi is preparing booking help...';
 
     const q1 = document.querySelector('.lumi-quick-1');
     const q2 = document.querySelector('.lumi-quick-2');
     const q3 = document.querySelector('.lumi-quick-3');
     const q4 = document.querySelector('.lumi-quick-4');
     const q5 = document.querySelector('.lumi-quick-5');
-    if (q1) q1.innerText = isTh ? 'ขอจองห้องประชุม' : 'Book a meeting room';
-    if (q2) q2.innerText = isTh ? 'ยืมหนังสือได้กี่วัน' : 'How long can I borrow books?';
-    if (q3) q3.innerText = isTh ? 'วันเวลาทำการของห้องสมุด' : 'Library operating hours';
-    if (q4) q4.innerText = isTh ? 'สืบค้นหนังสือได้อย่างไร' : 'How can I search for books?';
-    if (q5) q5.innerText = isTh ? 'ฐานข้อมูลมีอะไรบ้าง' : 'What databases are available?';
+    if (q1) q1.innerText = isTh ? 'วิธีจองห้องประชุม' : 'How to book a room';
+    if (q2) q2.innerText = isTh ? 'จองได้นานเท่าไร' : 'Maximum booking duration';
+    if (q3) q3.innerText = isTh ? 'ตรวจสอบเวลาว่าง' : 'Check room availability';
+    if (q4) q4.innerText = isTh ? 'มีห้องอะไรให้เลือกบ้าง' : 'Which rooms are available?';
+    if (q5) q5.innerText = isTh ? 'ยกเลิกการจองอย่างไร' : 'How to cancel a booking';
 
-    document.getElementById('lumi-resources-title').innerText = isTh ? 'ทรัพยากรและบริการห้องสมุด' : 'Library Resources & Services';
-    document.getElementById('lumi-resources-sub').innerText = isTh ? 'เข้าถึงสิ่งพิมพ์ e-Books e-Journals ฐานข้อมูล และบริการต่างๆ ของวิทยาลัยเซนต์หลุยส์' : 'Access Saint Louis College print books, e-resources, databases, and library services.';
-    document.getElementById('lumi-librarian-title').innerText = isTh ? 'ติดต่อบรรณารักษ์' : 'Ask a Librarian';
-    document.getElementById('lumi-librarian-sub').innerText = isTh ? 'ช่องทางติดต่อเจ้าหน้าที่งานวิทยบริการโดยตรง' : 'Direct contact channels for library staff';
-    document.getElementById('lumi-guide-title').innerText = isTh ? 'ระเบียบและเวลาทำการของห้องสมุด' : 'Library Regulations & Hours';
+    document.getElementById('lumi-resources-title').innerText = isTh ? 'เริ่มจองห้อง' : 'Start a booking';
+    document.getElementById('lumi-resources-sub').innerText = isTh ? 'ไปยังแบบฟอร์มเพื่อเลือกห้อง วันที่ และเวลา' : 'Open the form to choose a room, date, and time.';
+    document.getElementById('lumi-librarian-title').innerText = isTh ? 'ติดต่อเจ้าหน้าที่เรื่องการจอง' : 'Contact booking staff';
+    document.getElementById('lumi-librarian-sub').innerText = isTh ? 'สอบถามหรือแจ้งยกเลิกการจองห้องประชุม' : 'Ask about a reservation or request a cancellation.';
+    document.getElementById('lumi-guide-title').innerText = isTh ? 'เงื่อนไขการใช้ห้องประชุม' : 'Meeting room booking rules';
 
     renderFaqList();
     if (currentView === 'resources') renderResourcesList();
@@ -1098,16 +1105,12 @@
         aText.toLowerCase().includes(search);
 
       let matchesCat = true;
-      if (selectedFaqCategory === 'borrow') {
-        matchesCat = f.catTh.includes('ยืม') || f.catTh.includes('เวลา') || f.catEn.includes('Borrow') || f.catEn.includes('Hours');
-      } else if (selectedFaqCategory === 'room') {
-        matchesCat = f.catTh.includes('ห้อง') || f.catEn.includes('Room');
-      } else if (selectedFaqCategory === 'theses') {
-        matchesCat = f.catTh.includes('วิทยานิพนธ์') || f.catEn.includes('Theses');
-      } else if (selectedFaqCategory === 'databases') {
-        matchesCat = f.catTh.includes('ฐานข้อมูล') || f.catTh.includes('OPAC') || f.catEn.includes('Databases') || f.catEn.includes('OPAC');
-      } else if (selectedFaqCategory === 'service') {
-        matchesCat = f.catTh.includes('บริการ') || f.catEn.includes('Service');
+      if (selectedFaqCategory === 'booking') {
+        matchesCat = f.catTh === 'วิธีจอง' || f.catTh === 'เลือกห้อง';
+      } else if (selectedFaqCategory === 'rules') {
+        matchesCat = f.catTh === 'เงื่อนไข' || f.catTh === 'ยกเลิกการจอง';
+      } else if (selectedFaqCategory === 'availability') {
+        matchesCat = f.catTh === 'ตรวจสอบเวลาว่าง' || f.catTh === 'แก้ปัญหา';
       }
 
       return matchesSearch && matchesCat;
@@ -1259,7 +1262,7 @@
   }
 
   
-  function generateBotResponse(query) {
+  function generateLegacyLibraryResponse(query) {
     const q = query.toLowerCase();
     const isTh = currentLang === 'th';
 
@@ -1492,6 +1495,73 @@
     };
   }
 
+  function generateBotResponse(query) {
+    const q = query.toLowerCase();
+    const isTh = currentLang === 'th';
+
+    if (/(ยกเลิก|ยกเลิกการจอง|cancel)/i.test(q)) {
+      return {
+        text: isTh
+          ? 'หากต้องการยกเลิกการจอง กรุณาแจ้งเจ้าหน้าที่ล่วงหน้าก่อนเวลาใช้งาน สามารถติดต่อได้จากเมนู **ติดต่อเจ้าหน้าที่**'
+          : 'To cancel a booking, please notify staff before your scheduled time. Use the **Contact staff** tab for contact details.'
+      };
+    }
+
+    if (/(ติดต่อ|เจ้าหน้าที่|บรรณารักษ์|เบอร์|อีเมล|contact|staff|phone|email)/i.test(q)) {
+      return {
+        text: isTh
+          ? 'หากต้องการสอบถามหรือแจ้งปัญหาเกี่ยวกับการจอง ติดต่อเจ้าหน้าที่ได้จากเมนู **ติดต่อเจ้าหน้าที่** ซึ่งมีช่องทางโทรศัพท์ อีเมล Facebook และ LINE'
+          : 'For booking questions or issues, use the **Contact staff** tab for phone, email, Facebook, and LINE contact options.'
+      };
+    }
+
+    if (/(กี่ชั่วโมง|นานเท่าไร|ระยะเวลา|2 ชั่วโมง|สองชั่วโมง|duration|how long|hours)/i.test(q)) {
+      return {
+        text: isTh
+          ? 'จองได้สูงสุด **2 ชั่วโมงต่อคนต่อวัน** ตามระเบียบการใช้ห้องประชุม'
+          : 'Bookings are limited to **2 hours per person per day** under the meeting room rules.'
+      };
+    }
+
+    if (/(ปิด|ปิดปรับปรุง|ไม่ว่าง|เต็ม|ถูกจอง|จองแล้ว|unavailable|closed|maintenance|taken|already booked)/i.test(q)) {
+      return {
+        text: isTh
+          ? 'หากห้องปิดทำการหรือปิดปรับปรุง ระบบจะไม่ให้จองช่วงเวลานั้น หากช่วงเวลาถูกจองไปแล้ว กรุณาเลือกวันหรือเวลาอื่นที่ยังว่าง'
+          : 'Closed or maintenance periods cannot be booked. If a time slot has already been taken, choose another available date or time.'
+      };
+    }
+
+    if (/(ห้องอะไร|มีห้อง|เลือกห้อง|รายชื่อห้อง|which room|available rooms|room list)/i.test(q)) {
+      return {
+        text: isTh
+          ? '**ห้องที่ให้บริการ:**\n• Saint Louis: Conference Room 1-3, Mini Theater Room และ Research Room\n• Saint Benedict: Conference Room 1-2 และ Multi-purpose Room\nเลือกอาคารก่อน แล้วระบบจะแสดงรายชื่อห้องของอาคารนั้น'
+          : '**Available rooms:**\n• Saint Louis: Conference Rooms 1-3, Mini Theater Room, and Research Room\n• Saint Benedict: Conference Rooms 1-2 and the Multi-purpose Room\nSelect a building first to see its rooms.'
+      };
+    }
+
+    if (/(จอง|วิธี|ขั้นตอน|booking|reserve|reservation|how do i book)/i.test(q)) {
+      return {
+        text: isTh
+          ? '**ขั้นตอนการจอง:** เลือกอาคารและห้อง → เลือกวันที่และเวลาที่ยังว่าง → กรอกชื่อ/รหัส สถานะผู้ใช้ และรายละเอียดการใช้งาน → กด **ส่งข้อมูลการจอง** รอข้อความยืนยันว่าจองสำเร็จ'
+          : '**Booking steps:** Choose a building and room, select an available date and time, enter your name/ID and booking details, then select **Submit booking**. Wait for the success confirmation.'
+      };
+    }
+
+    if (/(เวลา|เวลาว่าง|ตาราง|availability|available|time slot|schedule)/i.test(q)) {
+      return {
+        text: isTh
+          ? 'ตรวจสอบตารางการจองและเลือกวันที่ในแบบฟอร์มเพื่อดูช่วงเวลาที่เลือกได้ ระบบจะแสดงเฉพาะเวลาที่อยู่ในเวลาทำการและยังไม่ถูกจอง'
+          : 'Check the booking schedule and choose a date in the form to see available time slots. Only unbooked times within operating hours can be selected.'
+      };
+    }
+
+    return {
+      text: isTh
+        ? 'ลูมิช่วยตอบคำถามเกี่ยวกับ **การจองห้องประชุม** ได้ เช่น วิธีจอง ห้องที่มีให้เลือก ระยะเวลาจอง เวลาว่าง และการยกเลิก หากต้องการความช่วยเหลืออื่นเกี่ยวกับรายการจอง ใช้เมนู **ติดต่อเจ้าหน้าที่** ได้ครับ'
+        : 'Lumi can help with **meeting room bookings**, including booking steps, available rooms, duration limits, availability, and cancellations. For other reservation help, use the **Contact staff** tab.'
+    };
+  }
+
   function escapeHtml(str) {
     return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
@@ -1527,6 +1597,7 @@
   }
 
   startPromptCycle();
+  startMascotMoodCycle();
 
   inputForm.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -1574,5 +1645,5 @@
   
   renderFaqList();
 
-  console.log('🐑 Lumi Library AI Chat Widget loaded successfully! (SLC Library Edition)');
+  console.log('Lumi room booking assistant loaded successfully.');
 })();

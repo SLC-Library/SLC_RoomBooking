@@ -376,7 +376,7 @@
                     <i class="fa-solid fa-pen-to-square text-sm"></i></div> กรอกรายละเอียดการจอง
                 </h2>
                 
-                <form id="bookingForm" class="space-y-4">
+                <form id="bookingForm" class="space-y-4" autocomplete="off">
                     <div>
                         <label class="flex items-center gap-2 text-sm font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
                             เลือกอาคารที่ต้องการใช้งาน
@@ -424,7 +424,7 @@
                         <label class="flex items-center gap-2 text-sm font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
                             ชื่อผู้จอง / รหัสประจำตัว
                         </label>
-                        <input type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#5388D8]/30 focus:ring-2 focus:ring-blue-500/10 transition" id="requester" placeholder="ตัวอย่าง: นายโซล่าร์ 100xxx" required>
+                        <input type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#5388D8]/30 focus:ring-2 focus:ring-blue-500/10 transition" id="requester" placeholder="ตัวอย่าง: นายโซล่าร์ 100xxx" autocomplete="off" required>
                     </div>
 
                     <div>
@@ -1950,7 +1950,6 @@
                     bookingDate: (fpBookingInstance && fpBookingInstance.input) ? fpBookingInstance.input.value : '',
                     startTime: document.getElementById('startTime') ? document.getElementById('startTime').value : '',
                     endTime: document.getElementById('endTime') ? document.getElementById('endTime').value : '',
-                    requester: document.getElementById('requester') ? document.getElementById('requester').value : '',
                     userStatus: document.getElementById('userStatus') ? document.getElementById('userStatus').value : '',
                     departmentSelect: document.getElementById('departmentSelect') ? document.getElementById('departmentSelect').value : '',
                     departmentInput: document.getElementById('departmentInput') ? document.getElementById('departmentInput').value : '',
@@ -1968,6 +1967,10 @@
                 const raw = localStorage.getItem('slc_formState');
                 if (!raw) return;
                 const state = JSON.parse(raw);
+                if (Object.prototype.hasOwnProperty.call(state, 'requester')) {
+                    delete state.requester;
+                    localStorage.setItem('slc_formState', JSON.stringify(state));
+                }
                 
                 if (state.building) {
                     const bEl = document.getElementById('building');
@@ -1992,10 +1995,6 @@
                 if (state.endTime) {
                     const etEl = document.getElementById('endTime');
                     if (etEl) etEl.value = state.endTime;
-                }
-                if (state.requester) {
-                    const reqEl = document.getElementById('requester');
-                    if (reqEl) reqEl.value = state.requester;
                 }
                 if (state.userStatus) {
                     const usEl = document.getElementById('userStatus');
@@ -2614,15 +2613,14 @@
                     if (typeof payload !== 'undefined') {
                     triggerEmailNotification(payload);
                       }
-                    // ล้าง localStorage หลังจองสำเร็จ
-                    localStorage.removeItem('slc_formState');
-
                     if (fpFilterInstance) {
                         fpFilterInstance.setDate(payload.date);
                     }
 
                     document.getElementById("bookingForm").reset();
                     if (fpBookingInstance) fpBookingInstance.clear(); 
+                    document.getElementById("requester").value = "";
+                    localStorage.removeItem('slc_formState');
                     
                     document.getElementById("room").disabled = true;
                     document.getElementById("startTime").disabled = true;

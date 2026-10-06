@@ -706,7 +706,7 @@
         : 'Need help? Click to chat with Lumi.';
       promptBubble.classList.remove('hidden');
       promptTimeoutId = setTimeout(hidePromptBubble, 4500);
-    }, 5000);
+    }, 10000);
   }
 
   function stopPromptCycle() {

@@ -2,12 +2,20 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // เจ้าหน้าที่ที่ล็อกอินด้วย Firebase Auth และมีเอกสาร UID ของตนอยู่ใน collection "admins"
-    // เท่านั้นที่ถือเป็นแอดมิน (สร้างบัญชีใน Firebase Console > Authentication แล้วเพิ่มเอกสาร
-    // admins/{UID} ด้วยตนเองใน Firestore Console — ไม่ต้องมีเซิร์ฟเวอร์หรือ Cloud Functions)
+    // Keep the approved email list here in sync with index.html.
     function isAdmin() {
       return request.auth != null &&
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+        (
+          exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+          (
+            request.auth.token.email_verified == true &&
+            request.auth.token.email is string &&
+            (
+              request.auth.token.email in ['library@slc.ac.th', 'akira@slc.ac.th'] ||
+              exists(/databases/$(database)/documents/adminEmails/$(request.auth.token.email))
+            )
+          )
+        );
     }
 
     function isValidId(id) {
@@ -87,10 +95,20 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // เอกสาร allowlist ของแอดมิน — เพิ่ม/ลบด้วยตนเองผ่าน Firestore Console เท่านั้น
-    // ไม่มีใครควรเขียน collection นี้ผ่านแอปได้เลย
+    // Admin allowlists are managed in the Firebase Console only. For Google sign-in,
+    // create adminEmails/{verified Google email}; the document contents are not used.
     match /admins/{uid} {
-      allow read, write: if false;
+      allow get: if request.auth != null && request.auth.uid == uid;
+      allow list, create, update, delete: if false;
+    }
+
+    // Google email allowlist. Users can only verify their own approved email;
+    // allowlist entries cannot be managed through the app.
+    match /adminEmails/{email} {
+      allow get: if request.auth != null &&
+        request.auth.token.email_verified == true &&
+        request.auth.token.email == email;
+      allow list, create, update, delete: if false;
     }
 
     match /test/{testId} {

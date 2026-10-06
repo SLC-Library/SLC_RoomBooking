@@ -282,17 +282,19 @@
       catEn: 'Availability',
       qTh: 'ตรวจสอบห้องหรือเวลาว่างได้อย่างไร?',
       qEn: 'How can I check room and time availability?',
-      aTh: 'ดูตารางการจองในหน้านี้ แล้วเลือกวันที่และช่วงเวลาที่ยังว่างในแบบฟอร์ม หากมีผู้จองช่วงเวลานั้นไปก่อน ระบบจะแจ้งให้เลือกเวลาอื่น',
-      aEn: 'Check the booking schedule on this page, then select an available date and time in the form. If someone books the slot first, the system will ask you to choose another time.'
+      aTh: 'ดูสถานะห้องและช่วงเวลาว่างแบบเรียลไทม์ได้ที่หน้า Dashboard หรือกดปุ่มด้านล่างเพื่อไปดูห้องว่าง',
+      aEn: 'Check room and time availability in the live Dashboard, or use the button below to open it.',
+      action: 'dashboard'
     },
     {
       id: 4,
-      catTh: 'เงื่อนไข',
-      catEn: 'Booking rules',
+      catTh: 'แก้ปัญหา',
+      catEn: 'Troubleshooting',
       qTh: 'ถ้าวันที่เลือกปิดทำการหรือห้องไม่ว่างต้องทำอย่างไร?',
       qEn: 'What if the room is closed or unavailable?',
-      aTh: 'เลือกวันหรือช่วงเวลาอื่น ระบบไม่อนุญาตให้จองช่วงเวลาที่ห้องปิดปรับปรุงหรือปิดทำการ',
-      aEn: 'Choose another date or time. The system does not allow bookings during room maintenance or closure.'
+      aTh: 'ตรวจสอบสถานะล่าสุดที่หน้า Dashboard แล้วเลือกห้องหรือช่วงเวลาอื่น ระบบไม่อนุญาตให้จองช่วงที่ห้องปิดทำการหรือปิดปรับปรุง',
+      aEn: 'Check the latest status in the Dashboard, then choose another room or time. Rooms cannot be booked while closed or under maintenance.',
+      action: 'dashboard'
     },
     {
       id: 5,
@@ -322,18 +324,6 @@
       aEn: 'Another user may have booked that time at the same moment. Select another available slot and submit your booking again.'
     }
   ];
-
-  const RESOURCES = [
-    {
-      id: 1,
-      titleTh: 'ไปยังแบบฟอร์มจองห้อง',
-      titleEn: 'Go to the booking form',
-      descTh: 'เลือกอาคาร ห้อง วันที่ และช่วงเวลาที่ต้องการ',
-      descEn: 'Choose a building, room, date, and time slot.',
-      url: '#bookingForm'
-    },
-  ];
-
 
   const container = document.createElement('div');
   container.id = 'lumi-widget-root';
@@ -403,16 +393,7 @@
             <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-blue-400 rounded-full"></span>
           </button>
 
-          <!-- 3. Resources Tab -->
-          <button 
-            id="lumi-tab-resources-btn"
-            class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
-            title="เริ่มจองห้อง / Start booking"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
-          </button>
-
-          <!-- 4. Booking Contact Tab -->
+          <!-- 3. Booking Contact Tab -->
           <button 
             id="lumi-tab-librarian-btn"
             class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
@@ -421,14 +402,6 @@
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 18v-6a9 9 0 0118 0v6"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>
           </button>
 
-          <!-- 5. Guide & Rules Tab -->
-          <button 
-            id="lumi-tab-guide-btn"
-            class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
-            title="เงื่อนไขการจอง / Booking rules"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-          </button>
         </div>
 
         <!-- Reset / Clear Button (Bottom aligned) -->
@@ -525,12 +498,12 @@
                     </button>
 
                     <!-- Item 3: Room availability -->
-                    <button onclick="window.LumiWidget.sendQuickMessage('ตรวจสอบเวลาว่าง', 'How can I check room and time availability?')" class="text-left p-3 rounded-xl bg-slate-50/80 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 transition-all flex items-center justify-between group cursor-pointer shadow-2xs">
+                    <button onclick="window.LumiWidget.openDashboard()" class="text-left p-3 rounded-xl bg-slate-50/80 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 transition-all flex items-center justify-between group cursor-pointer shadow-2xs">
                       <div class="flex items-center gap-2 min-w-0 pr-1">
                         <span class="text-base flex-shrink-0">📅</span>
-                        <span class="text-xs sm:text-[13px] text-slate-700 font-medium group-hover:text-blue-900 truncate lumi-quick-3">ตรวจสอบเวลาว่าง</span>
+                        <span class="text-xs sm:text-[13px] text-slate-700 font-medium group-hover:text-blue-900 truncate lumi-quick-3">ดูห้องว่าง</span>
                       </div>
-                      <span class="px-2 py-0.5 text-[9px] font-bold bg-slate-200/80 text-slate-700 rounded-full flex-shrink-0">ตารางจอง</span>
+                      <span class="px-2 py-0.5 text-[9px] font-bold bg-slate-200/80 text-slate-700 rounded-full flex-shrink-0">Dashboard</span>
                     </button>
 
                     <!-- Item 4: Rooms -->
@@ -651,19 +624,6 @@
           </div>
         </div>
 
-        <!-- RESOURCES VIEW -->
-        <div id="lumi-resources-view" class="hidden flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50">
-          <div class="max-w-2xl mx-auto w-full space-y-4">
-            <div class="border-b border-slate-200 pb-3">
-              <h3 id="lumi-resources-title" class="font-prompt font-bold text-base sm:text-lg text-slate-800">เริ่มจองห้อง</h3>
-              <p id="lumi-resources-sub" class="text-xs text-slate-500 mt-0.5">ไปยังแบบฟอร์มเพื่อเลือกห้อง วันที่ และเวลา</p>
-            </div>
-            <div id="lumi-resources-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <!-- Populated by JS -->
-            </div>
-          </div>
-        </div>
-
         <!-- BOOKING CONTACT VIEW -->
         <div id="lumi-librarian-view" class="hidden flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50">
           <div class="max-w-2xl mx-auto w-full space-y-4">
@@ -677,18 +637,6 @@
           </div>
         </div>
 
-        <!-- GUIDE VIEW -->
-        <div id="lumi-guide-view" class="hidden flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50">
-          <div class="max-w-2xl mx-auto w-full space-y-4">
-            <div class="border-b border-slate-200 pb-3">
-              <h3 id="lumi-guide-title" class="font-prompt font-bold text-base sm:text-lg text-slate-800">เงื่อนไขการใช้ห้องประชุม</h3>
-              <p class="text-xs text-slate-500 mt-0.5">ข้อมูลสำคัญก่อนส่งรายการจอง</p>
-            </div>
-            <div id="lumi-guide-content" class="space-y-3 text-xs sm:text-[13px]">
-              <!-- Populated by JS -->
-            </div>
-          </div>
-        </div>
       </main>
     </div>
   `;
@@ -711,12 +659,8 @@
   const faqCategoriesContainer = document.getElementById('lumi-faq-categories');
   const faqSearchInput = document.getElementById('lumi-faq-search-input');
   const faqBackBtn = document.getElementById('lumi-faq-back-btn');
-  const resourcesView = document.getElementById('lumi-resources-view');
   const librarianView = document.getElementById('lumi-librarian-view');
-  const guideView = document.getElementById('lumi-guide-view');
-  const resourcesList = document.getElementById('lumi-resources-list');
   const librarianContent = document.getElementById('lumi-librarian-content');
-  const guideContent = document.getElementById('lumi-guide-content');
 
   let selectedFaqCategory = 'all';
 
@@ -730,9 +674,7 @@
   const tabButtons = {
     chat: document.getElementById('lumi-tab-chat-btn'),
     faq: document.getElementById('lumi-tab-faq-btn'),
-    resources: document.getElementById('lumi-tab-resources-btn'),
-    librarian: document.getElementById('lumi-tab-librarian-btn'),
-    guide: document.getElementById('lumi-tab-guide-btn')
+    librarian: document.getElementById('lumi-tab-librarian-btn')
   };
 
   let promptIntervalId;
@@ -822,9 +764,7 @@
     currentView = view;
     chatView.classList.toggle('hidden', view !== 'chat');
     faqView.classList.toggle('hidden', view !== 'faq');
-    resourcesView.classList.toggle('hidden', view !== 'resources');
     librarianView.classList.toggle('hidden', view !== 'librarian');
-    guideView.classList.toggle('hidden', view !== 'guide');
 
     Object.keys(tabButtons).forEach(key => {
       const btn = tabButtons[key];
@@ -837,28 +777,7 @@
     });
 
     if (view === 'faq') renderFaqList();
-    if (view === 'resources') renderResourcesList();
     if (view === 'librarian') renderLibrarianContent();
-    if (view === 'guide') renderGuideContent();
-  }
-
-
-  function renderResourcesList() {
-    const isTh = currentLang === 'th';
-    resourcesList.innerHTML = RESOURCES.map(r => `
-      <div class="p-4 bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all flex flex-col justify-between">
-        <div>
-          <h4 class="text-xs sm:text-sm font-bold text-slate-800 font-prompt text-center">${isTh ? r.titleTh : r.titleEn}</h4>
-          <p class="text-[11px] sm:text-xs text-slate-500 mt-1 leading-relaxed text-center">${isTh ? r.descTh : r.descEn}</p>
-        </div>
-        <div class="mt-3.5 flex flex-col gap-1.5">
-          <a href="${r.url}" class="w-full py-2 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
-            <span>${isTh ? 'ไปยังแบบฟอร์มจอง' : 'Open booking form'}</span>
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-          </a>
-        </div>
-      </div>
-    `).join('');
   }
 
 
@@ -917,91 +836,6 @@
   }
 
 
-  function renderGuideContent() {
-    const isTh = currentLang === 'th';
-    const bookingRules = isTh
-      ? [
-          'เลือกอาคารและห้องจากรายการในแบบฟอร์ม ระบบจะแสดงเฉพาะห้องของอาคารที่เลือก',
-          'เลือกวันที่เพื่อดูเวลาเปิดให้จอง แล้วเลือกเวลาเริ่มต้นและสิ้นสุดที่ยังว่าง',
-          'จองได้สูงสุด 2 ชั่วโมงต่อคนต่อวัน',
-          'ห้องที่ปิดทำการหรือปิดปรับปรุงจะไม่สามารถจองได้',
-          'หากต้องการยกเลิก กรุณาแจ้งเจ้าหน้าที่ล่วงหน้าก่อนเวลาใช้งาน'
-        ]
-      : [
-          'Choose a building and room in the form. Only rooms in the selected building are shown.',
-          'Choose a date to see bookable times, then select an available start and end time.',
-          'Bookings are limited to 2 hours per person per day.',
-          'Rooms marked closed or under maintenance cannot be booked.',
-          'To cancel, notify staff before your scheduled booking time.'
-        ];
-
-    guideContent.innerHTML = `
-      <div class="p-4 bg-white rounded-2xl border border-slate-200/90 shadow-xs">
-        <h4 class="font-bold text-slate-800 font-prompt flex items-center gap-2 mb-3 text-sm">
-          ${isTh ? 'ก่อนส่งรายการจอง' : 'Before submitting a booking'}
-        </h4>
-        <ol class="space-y-2 text-slate-600 leading-relaxed list-decimal pl-5">
-          ${bookingRules.map(rule => `<li>${rule}</li>`).join('')}
-        </ol>
-        <a href="#bookingForm" class="mt-4 inline-flex items-center justify-center px-4 py-2 rounded-xl bg-blue-900 hover:bg-blue-800 text-white text-xs font-semibold">
-          ${isTh ? 'ไปยังแบบฟอร์มจอง' : 'Go to booking form'}
-        </a>
-      </div>
-    `;
-    return;
-
-    const dyn = getDynamicAdminData();
-    const h = (dyn && dyn.hours) ? dyn.hours : {
-      centralTh: 'ทุกวัน 10:00 - 19:00 น.',
-      centralEn: 'Daily, 10:00 AM - 7:00 PM',
-      branchTh: 'วันจันทร์ - วันศุกร์ 08:00 - 17:00 น.',
-      branchEn: 'Monday - Friday, 8:00 AM - 5:00 PM',
-      noteTh: 'ปิดทำการในวันหยุดนักขัตฤกษ์',
-      noteEn: 'Closed on Public Holidays'
-    };
-    const p = (dyn && dyn.policies) ? dyn.policies : {
-      undergradTh: '7 เล่ม / 7 วัน',
-      undergradEn: '7 items / 7 days',
-      gradTh: '10 เล่ม / 14 วัน',
-      gradEn: '10 items / 14 days',
-      facultyTh: '20 เล่ม / 30 วัน',
-      facultyEn: '20 items / 30 days',
-      renewalTh: 'สามารถต่ออายุการยืมได้ 2 ครั้ง',
-      renewalEn: 'Can renew 2 times',
-      fineTh: 'ค่าปรับส่งเกินกำหนด 10 บาท/เล่ม/วัน',
-      fineEn: 'Overdue fine: 10 THB/item/day'
-    };
-
-    guideContent.innerHTML = `
-      <div class="p-4 bg-white rounded-2xl border border-slate-200/90 shadow-xs">
-        <h4 class="font-bold text-slate-800 font-prompt flex items-center gap-2 mb-2 text-sm">
-          <svg class="w-4 h-4 text-blue-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 3"/></svg>
-          ${isTh ? 'เวลาทำการ (Operating Hours)' : 'Hours of Operation'}
-        </h4>
-        <ul class="space-y-1.5 text-slate-600 leading-relaxed">
-          <li>• <strong>${isTh ? 'ห้องสมุดกลาง Saint Louis (ฝั่งโรงพยาบาล):' : 'Central Library (Hospital Side):'}</strong> ${isTh ? h.centralTh : h.centralEn}</li>
-          <li>• <strong>${isTh ? 'ห้องสมุดสาขา Saint Benedict (ฝั่งอาคารเรียน):' : 'Saint Benedict (Academic Side):'}</strong> ${isTh ? h.branchTh : h.branchEn}</li>
-          <li class="text-slate-500 text-[11px] pt-1">• ${isTh ? h.noteTh : h.noteEn}</li>
-        </ul>
-      </div>
-
-      <div class="p-4 bg-white rounded-2xl border border-slate-200/90 shadow-xs">
-        <h4 class="font-bold text-slate-800 font-prompt flex items-center gap-2 mb-2 text-sm">
-          <svg class="w-4 h-4 text-blue-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-          ${isTh ? 'ระยะเวลายืมหนังสือ (Loan Policy)' : 'Loan Policy'}
-        </h4>
-        <ul class="space-y-1.5 text-slate-600 leading-relaxed">
-          <li>• <strong>${isTh ? 'นักศึกษา ป.ตรี, บุคลากร, หลักสูตรระยะสั้น:' : 'Undergraduate, Staff:'}</strong> ${isTh ? p.undergradTh : p.undergradEn}</li>
-          <li>• <strong>${isTh ? 'นักศึกษา ป.โท:' : 'Graduate Students:'}</strong> ${isTh ? p.gradTh : p.gradEn}</li>
-          <li>• <strong>${isTh ? 'คณาจารย์:' : 'Faculty Members:'}</strong> ${isTh ? p.facultyTh : p.facultyEn}</li>
-          <li>• <strong style="color: #16a34a;">${isTh ? 'การต่ออายุ:' : 'Renewal Policy:'}</strong> ${isTh ? p.renewalTh : p.renewalEn}</li>
-          <li class="text-rose-600 text-[11px] pt-1">• * ${isTh ? p.fineTh : p.fineEn}</li>
-        </ul>
-      </div>
-    `;
-  }
-
-  
   function setLanguage(lang) {
     currentLang = lang;
     const isTh = currentLang === 'th';
@@ -1056,20 +890,15 @@
     const q5 = document.querySelector('.lumi-quick-5');
     if (q1) q1.innerText = isTh ? 'วิธีจองห้องประชุม' : 'How to book a room';
     if (q2) q2.innerText = isTh ? 'จองได้นานเท่าไร' : 'Maximum booking duration';
-    if (q3) q3.innerText = isTh ? 'ตรวจสอบเวลาว่าง' : 'Check room availability';
+    if (q3) q3.innerText = isTh ? 'ดูห้องว่าง' : 'View room availability';
     if (q4) q4.innerText = isTh ? 'มีห้องอะไรให้เลือกบ้าง' : 'Which rooms are available?';
     if (q5) q5.innerText = isTh ? 'ยกเลิกการจองอย่างไร' : 'How to cancel a booking';
 
-    document.getElementById('lumi-resources-title').innerText = isTh ? 'เริ่มจองห้อง' : 'Start a booking';
-    document.getElementById('lumi-resources-sub').innerText = isTh ? 'ไปยังแบบฟอร์มเพื่อเลือกห้อง วันที่ และเวลา' : 'Open the form to choose a room, date, and time.';
     document.getElementById('lumi-librarian-title').innerText = isTh ? 'ติดต่อเจ้าหน้าที่เรื่องการจอง' : 'Contact booking staff';
     document.getElementById('lumi-librarian-sub').innerText = isTh ? 'สอบถามหรือแจ้งยกเลิกการจองห้องประชุม' : 'Ask about a reservation or request a cancellation.';
-    document.getElementById('lumi-guide-title').innerText = isTh ? 'เงื่อนไขการใช้ห้องประชุม' : 'Meeting room booking rules';
 
     renderFaqList();
-    if (currentView === 'resources') renderResourcesList();
     if (currentView === 'librarian') renderLibrarianContent();
-    if (currentView === 'guide') renderGuideContent();
   }
 
   
@@ -1191,7 +1020,8 @@
       showTyping(false);
       appendBotBubble({
         text: isTh ? faq.aTh : faq.aEn,
-        links: faq.links || []
+        links: faq.links || [],
+        action: faq.action
       });
     }, 550);
   }
@@ -1232,6 +1062,14 @@
         `).join('') + '</div>';
     }
 
+    const actionHtml = content.action === 'dashboard'
+      ? `<div class="mt-3">
+          <button type="button" onclick="window.LumiWidget.openDashboard()" class="px-3.5 py-2 rounded-xl bg-blue-900 hover:bg-blue-800 text-white text-xs font-semibold transition-colors cursor-pointer">
+            ${currentLang === 'th' ? 'ดูห้องว่างใน Dashboard' : 'View availability in Dashboard'}
+          </button>
+        </div>`
+      : '';
+
     bubble.innerHTML = `
       <div class="w-7 h-7 bg-blue-100 rounded-full flex-shrink-0 flex items-center justify-center mt-0.5 shadow-xs">
         <span class="text-[10px] font-bold text-blue-900">L</span>
@@ -1240,6 +1078,7 @@
         <div class="p-3.5 sm:p-4 shadow-xs text-xs sm:text-[13.5px] leading-relaxed bg-white text-slate-700 border border-slate-200/90 rounded-2xl rounded-tl-none">
           <div class="lumi-bubble-content">${formatted}</div>
           ${linksHtml}
+          ${actionHtml}
         </div>
         <div class="flex items-center gap-2 px-1 text-[11px] text-slate-400">
           <span>${time}</span>
@@ -1526,8 +1365,9 @@
     if (/(ปิด|ปิดปรับปรุง|ไม่ว่าง|เต็ม|ถูกจอง|จองแล้ว|unavailable|closed|maintenance|taken|already booked)/i.test(q)) {
       return {
         text: isTh
-          ? 'หากห้องปิดทำการหรือปิดปรับปรุง ระบบจะไม่ให้จองช่วงเวลานั้น หากช่วงเวลาถูกจองไปแล้ว กรุณาเลือกวันหรือเวลาอื่นที่ยังว่าง'
-          : 'Closed or maintenance periods cannot be booked. If a time slot has already been taken, choose another available date or time.'
+          ? 'หากห้องปิดทำการหรือปิดปรับปรุง ระบบจะไม่ให้จองช่วงเวลานั้น ตรวจสอบสถานะล่าสุดและเลือกห้องหรือเวลาอื่นได้ที่ Dashboard'
+          : 'Closed or maintenance periods cannot be booked. Check the latest status in the Dashboard and choose another room or time.',
+        action: 'dashboard'
       };
     }
 
@@ -1547,11 +1387,12 @@
       };
     }
 
-    if (/(เวลา|เวลาว่าง|ตาราง|availability|available|time slot|schedule)/i.test(q)) {
+    if (/(ห้องว่าง|เวลาว่าง|ตาราง|availability|available|time slot|schedule)/i.test(q)) {
       return {
         text: isTh
-          ? 'ตรวจสอบตารางการจองและเลือกวันที่ในแบบฟอร์มเพื่อดูช่วงเวลาที่เลือกได้ ระบบจะแสดงเฉพาะเวลาที่อยู่ในเวลาทำการและยังไม่ถูกจอง'
-          : 'Check the booking schedule and choose a date in the form to see available time slots. Only unbooked times within operating hours can be selected.'
+          ? 'ดูสถานะห้องและช่วงเวลาว่างแบบเรียลไทม์ได้ที่หน้า Dashboard'
+          : 'Check room and time availability in the live Dashboard.',
+        action: 'dashboard'
       };
     }
 
@@ -1577,9 +1418,7 @@
   document.getElementById('lumi-minimize-btn').addEventListener('click', closeWidget);
   document.getElementById('lumi-tab-chat-btn').addEventListener('click', () => switchView('chat'));
   document.getElementById('lumi-tab-faq-btn').addEventListener('click', () => switchView('faq'));
-  document.getElementById('lumi-tab-resources-btn').addEventListener('click', () => switchView('resources'));
   document.getElementById('lumi-tab-librarian-btn').addEventListener('click', () => switchView('librarian'));
-  document.getElementById('lumi-tab-guide-btn').addEventListener('click', () => switchView('guide'));
   if (faqBackBtn) faqBackBtn.addEventListener('click', () => switchView('chat'));
   const heroFaqsLink = document.getElementById('lumi-hero-faqs-link');
   if (heroFaqsLink) heroFaqsLink.addEventListener('click', () => switchView('faq'));
@@ -1613,6 +1452,10 @@
     open: openWidget,
     close: closeWidget,
     toggle: toggleWidget,
+    openDashboard: () => {
+      closeWidget();
+      window.switchView('dashboard');
+    },
     setLanguage: setLanguage,
     switchView: switchView,
     setFaqCategory: (catId) => {

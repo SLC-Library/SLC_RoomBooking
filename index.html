@@ -110,10 +110,10 @@
             background: #93c5fd;
             border: 2px solid #3b82f6;
             padding: 5px;
-            margin: 1em auto 0.3em !important;
+            margin: 0.5em auto 0 !important;
         }
         .lumi-swal-image + .brand-swal-title {
-            margin-top: 0.3em !important;
+            margin-top: 0 !important;
         }
         .brand-swal-actions {
             gap: 10px !important;
@@ -1427,8 +1427,8 @@
             const mascotMood = mood || (icon === 'success' ? 'happy' : icon === 'error' ? 'surprised' : 'thinking');
             return BrandSwal.fire({
                 imageUrl: new URL(`./public/assets/lumi/lumi-${mascotMood}.png`, window.location.href).href,
-                imageWidth: 104,
-                imageHeight: 104,
+                imageWidth: 144,
+                imageHeight: 144,
                 imageAlt: 'Lumi',
                 imageClass: 'lumi-swal-image',
                 ...alertOptions

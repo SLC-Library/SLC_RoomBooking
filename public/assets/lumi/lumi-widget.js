@@ -178,6 +178,28 @@
         padding: 0.625rem;
       }
     }
+    @media (min-width: 641px) and (max-width: 1366px) {
+      #lumi-widget-root {
+        bottom: 16px;
+        right: 16px;
+      }
+      #lumi-widget-root #lumi-floating-trigger {
+        width: 76px;
+        height: 76px;
+      }
+      #lumi-widget-root #lumi-main-window {
+        width: min(600px, calc(100vw - 40px));
+        height: min(680px, calc(100dvh - 40px));
+        max-height: calc(100dvh - 40px);
+      }
+    }
+    @media (min-width: 1367px) {
+      #lumi-widget-root #lumi-main-window {
+        width: min(740px, calc(100vw - 48px));
+        height: min(740px, calc(100dvh - 48px));
+        max-height: calc(100dvh - 48px);
+      }
+    }
   `;
   document.head.appendChild(styleEl);
 

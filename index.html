@@ -1456,7 +1456,7 @@
             const { icon, didOpen, ...alertOptions } = options;
             const mascotMood = mood || (icon === 'success' ? 'happy' : icon === 'error' ? 'surprised' : 'thinking');
             return BrandSwal.fire({
-                imageUrl: new URL(`./public/assets/lumi/lumi-${mascotMood}.png`, window.location.href).href,
+                imageUrl: new URL(`./public/assets/lumi/lumi-${mascotMood}-alert.png`, window.location.href).href,
                 imageWidth: 184,
                 imageHeight: 184,
                 imageAlt: 'Lumi',

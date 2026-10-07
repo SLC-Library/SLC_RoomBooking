@@ -150,6 +150,34 @@
     #lumi-widget-root [class~="focus:border-blue-900"]:focus {
       border-color: #5388D8 !important;
     }
+    @media (max-width: 640px) {
+      #lumi-widget-root {
+        bottom: 12px;
+        right: 12px;
+      }
+      #lumi-widget-root #lumi-floating-trigger {
+        width: 64px;
+        height: 64px;
+      }
+      #lumi-widget-root #lumi-main-window {
+        width: min(420px, calc(100vw - 24px));
+        height: min(640px, 76vh);
+        max-height: 76vh;
+        border-radius: 1.25rem;
+      }
+      #lumi-widget-root #lumi-main-window > aside {
+        width: 44px;
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+      }
+      #lumi-widget-root #lumi-main-window > aside button {
+        width: 2.125rem;
+        height: 2.125rem;
+      }
+      #lumi-widget-root #lumi-main-window > main > header {
+        padding: 0.625rem;
+      }
+    }
   `;
   document.head.appendChild(styleEl);
 

@@ -383,7 +383,7 @@
       title="ถามน้องลูมิ (Lumi Room Booking Assistant)"
       aria-label="เปิดผู้ช่วย Lumi"
     >
-      <div class="relative w-full h-full flex items-center justify-center rounded-full bg-blue-50 p-0.5">
+      <div class="relative w-full h-full flex items-center justify-center rounded-full bg-blue-400 p-0.5">
         <img id="lumi-mascot-avatar" src="${new URL('lumi-waving.png', lumiAssetBase).href}" alt="" class="w-full h-full object-contain">
         <div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-white"></div>
       </div>

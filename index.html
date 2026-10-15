@@ -1082,7 +1082,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
         import { 
             getFirestore, collection, addDoc, getDocs, doc, deleteDoc, 
-            onSnapshot, getDocFromServer, getDoc, runTransaction, writeBatch
+            onSnapshot, getDocFromServer, getDoc, runTransaction
         } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
         import {
             getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut,
@@ -1221,16 +1221,21 @@
         function computeSlotIds(building, room, date, startTime, endTime) {
             const start = timeStrToMinutes(startTime);
             const end = timeStrToMinutes(endTime);
-            const ids = [];
+            const slots = [];
             for (let m = start; m < end; m += SLOT_MINUTES) {
-                ids.push(`${slugForDocId(building)}__${slugForDocId(room)}__${date}__${minutesToSlotLabel(m)}`);
+                const label = minutesToSlotLabel(m);
+                slots.push({
+                    id: `${slugForDocId(building)}__${slugForDocId(room)}__${date}__${label}`,
+                    time: label
+                });
             }
-            return ids;
+            return slots;
         }
 
         async function createBookingLocked(payload) {
-            const slotIds = computeSlotIds(payload.building, payload.room, payload.date, payload.startTime, payload.endTime);
-            if (slotIds.length === 0) {
+            const slots = computeSlotIds(payload.building, payload.room, payload.date, payload.startTime, payload.endTime);
+            const slotIds = slots.map(slot => slot.id);
+            if (slotIds.length === 0 || slotIds.length > 4) {
                 throw new Error('INVALID_TIME_RANGE');
             }
             const bookingRef = doc(collection(db, "bookings"));
@@ -1245,12 +1250,13 @@
                     }
 
                     const nowIso = new Date().toISOString();
-                    slotIds.forEach((slotId) => {
-                        tx.set(doc(db, "slots", slotId), {
+                    slots.forEach((slot) => {
+                        tx.set(doc(db, "slots", slot.id), {
                             bookingId: bookingRef.id,
                             building: payload.building,
                             room: payload.room,
                             date: payload.date,
+                            slotTime: slot.time,
                             createdAt: nowIso
                         });
                     });
@@ -1271,22 +1277,31 @@
             createBookingLocked: (payload) => createBookingLocked(payload),
             deleteBooking: async (id) => {
                 try {
-                    // อ่านรายการจองก่อนลบ เพื่อปลดล็อก slot ที่ผูกไว้ (ถ้ามี) พร้อมกันในธุรกรรมเดียว
-                    let slotIds = [];
-                    try {
-                        const snap = await getDoc(doc(db, "bookings", id));
-                        if (snap.exists() && Array.isArray(snap.data().slotIds)) {
-                            slotIds = snap.data().slotIds;
-                        }
-                    } catch (e) {
-                        console.warn('Could not read booking before delete (slots may be orphaned):', e);
-                    }
+                    const bookingRef = doc(db, "bookings", id);
+                    return await runTransaction(db, async (tx) => {
+                        const bookingSnap = await tx.get(bookingRef);
+                        if (!bookingSnap.exists()) return { success: true, alreadyDeleted: true };
 
-                    const batch = writeBatch(db);
-                    batch.delete(doc(db, "bookings", id));
-                    slotIds.forEach((slotId) => batch.delete(doc(db, "slots", slotId)));
-                    await batch.commit();
-                    return { success: true };
+                        const slotIds = bookingSnap.data().slotIds || [];
+                        if (!Array.isArray(slotIds) || slotIds.length > 4 ||
+                            slotIds.some(slotId => typeof slotId !== 'string' || !slotId)) {
+                            throw new Error('INVALID_SLOT_LOCKS');
+                        }
+
+                        const slotRefs = slotIds.map(slotId => doc(db, "slots", slotId));
+                        const slotSnaps = [];
+                        for (const slotRef of slotRefs) {
+                            slotSnaps.push(await tx.get(slotRef));
+                        }
+
+                        tx.delete(bookingRef);
+                        slotSnaps.forEach((slotSnap, index) => {
+                            if (slotSnap.exists() && slotSnap.data().bookingId === id) {
+                                tx.delete(slotRefs[index]);
+                            }
+                        });
+                        return { success: true };
+                    });
                 } catch (err) {
                     handleFirestoreError(err, 'delete', `bookings/${id}`);
                 }

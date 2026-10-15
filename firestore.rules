@@ -28,10 +28,135 @@ service cloud.firestore {
 
     function isValidBooking(data) {
       return data.room is string && data.room.size() > 0 && data.room.size() <= 100
-        && data.date is string && data.date.size() >= 10
-        && data.startTime is string && data.startTime.size() >= 4
-        && data.endTime is string && data.endTime.size() >= 4
+        && data.building is string && data.building.size() > 0 && data.building.size() <= 100
+        && slotPrefix(data.building, data.room) != ''
+        && data.date is string && data.date.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$')
+        && data.startTime is string && data.startTime.matches('^([01][0-9]|2[0-3]):(00|30)$')
+        && data.endTime is string && data.endTime.matches('^([01][0-9]|2[0-3]):(00|30)$')
+        && timeToMinutes(data.endTime) > timeToMinutes(data.startTime)
+        && timeToMinutes(data.endTime) - timeToMinutes(data.startTime) <= 120
         && ((('requester' in data) && data.requester is string && data.requester.size() > 0) || (('booker' in data) && data.booker is string && data.booker.size() > 0));
+    }
+
+    function slotPrefix(building, room) {
+      return building == 'Saint Louis' && room == 'Conference Room 1' ? 'Saint-Louis-yfrg71__Conference-Room-1-invcts' :
+        building == 'Saint Louis' && room == 'Conference Room 2' ? 'Saint-Louis-yfrg71__Conference-Room-2-invctt' :
+        building == 'Saint Louis' && room == 'Conference Room 3' ? 'Saint-Louis-yfrg71__Conference-Room-3-invctu' :
+        building == 'Saint Louis' && room == 'Mini Theater Room' ? 'Saint-Louis-yfrg71__Mini-Theater-Room-8v9ryr' :
+        building == 'Saint Louis' && room == 'Research Room' ? 'Saint-Louis-yfrg71__Research-Room-kx0ri8' :
+        building == 'Saint Benedict' && room == 'Conference Room 1' ? 'Saint-Benedict-qbhdov__Conference-Room-1-invcts' :
+        building == 'Saint Benedict' && room == 'Conference Room 2' ? 'Saint-Benedict-qbhdov__Conference-Room-2-invctt' :
+        building == 'Saint Benedict' && room == 'Multi-purpose Room' ? 'Saint-Benedict-qbhdov__Multi-purpose-Room-1y3yrjl' : '';
+    }
+
+    function timeToMinutes(time) {
+      let minutesByTime = {
+        '00:00': 0, '00:30': 30, '01:00': 60, '01:30': 90,
+        '02:00': 120, '02:30': 150, '03:00': 180, '03:30': 210,
+        '04:00': 240, '04:30': 270, '05:00': 300, '05:30': 330,
+        '06:00': 360, '06:30': 390, '07:00': 420, '07:30': 450,
+        '08:00': 480, '08:30': 510, '09:00': 540, '09:30': 570,
+        '10:00': 600, '10:30': 630, '11:00': 660, '11:30': 690,
+        '12:00': 720, '12:30': 750, '13:00': 780, '13:30': 810,
+        '14:00': 840, '14:30': 870, '15:00': 900, '15:30': 930,
+        '16:00': 960, '16:30': 990, '17:00': 1020, '17:30': 1050,
+        '18:00': 1080, '18:30': 1110, '19:00': 1140, '19:30': 1170,
+        '20:00': 1200, '20:30': 1230, '21:00': 1260, '21:30': 1290,
+        '22:00': 1320, '22:30': 1350, '23:00': 1380, '23:30': 1410
+      };
+      return minutesByTime.keys().hasAny([time]) ? minutesByTime[time] : -1;
+    }
+
+    function slotTimeToMinutes(time) {
+      let minutesBySlotTime = {
+        '0000': 0, '0030': 30, '0100': 60, '0130': 90,
+        '0200': 120, '0230': 150, '0300': 180, '0330': 210,
+        '0400': 240, '0430': 270, '0500': 300, '0530': 330,
+        '0600': 360, '0630': 390, '0700': 420, '0730': 450,
+        '0800': 480, '0830': 510, '0900': 540, '0930': 570,
+        '1000': 600, '1030': 630, '1100': 660, '1130': 690,
+        '1200': 720, '1230': 750, '1300': 780, '1330': 810,
+        '1400': 840, '1430': 870, '1500': 900, '1530': 930,
+        '1600': 960, '1630': 990, '1700': 1020, '1730': 1050,
+        '1800': 1080, '1830': 1110, '1900': 1140, '1930': 1170,
+        '2000': 1200, '2030': 1230, '2100': 1260, '2130': 1290,
+        '2200': 1320, '2230': 1350, '2300': 1380, '2330': 1410
+      };
+      return minutesBySlotTime.keys().hasAny([time]) ? minutesBySlotTime[time] : -1;
+    }
+
+    function isValidSlotId(slotId) {
+      return slotId is string && slotId.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function slotDataMatchesBooking(bookingId, booking, slotId, slot) {
+      let startMinutes = timeToMinutes(booking.startTime);
+      let slotMinutes = slotTimeToMinutes(slot.slotTime);
+      return slot.bookingId == bookingId
+        && slot.building == booking.building
+        && slot.room == booking.room
+        && slot.date == booking.date
+        && slot.slotTime is string
+        && slot.slotTime.matches('^([01][0-9]|2[0-3])(00|30)$')
+        && slotMinutes >= startMinutes
+        && slotMinutes < timeToMinutes(booking.endTime)
+        && (slotMinutes - startMinutes) % 30 == 0
+        && slotId == slotPrefix(booking.building, booking.room) + '__' + booking.date + '__' + slot.slotTime;
+    }
+
+    function slotMatchesBooking(bookingId, booking, slotId) {
+      let slotPath = /databases/$(database)/documents/slots/$(slotId);
+      return existsAfter(slotPath)
+        && slotDataMatchesBooking(bookingId, booking, slotId, getAfter(slotPath).data);
+    }
+
+    function hasBookingSlotLocks(bookingId, booking) {
+      return booking.slotIds is list
+        && booking.slotIds.size() > 0
+        && booking.slotIds.size() <= 4
+        && booking.slotIds.size() == (timeToMinutes(booking.endTime) - timeToMinutes(booking.startTime)) / 30
+        && booking.slotIds[0] is string
+        && slotMatchesBooking(bookingId, booking, booking.slotIds[0])
+        && (booking.slotIds.size() < 2 || (
+          booking.slotIds[1] is string
+          && booking.slotIds[1] != booking.slotIds[0]
+          && slotMatchesBooking(bookingId, booking, booking.slotIds[1])
+        ))
+        && (booking.slotIds.size() < 3 || (
+          booking.slotIds[2] is string
+          && booking.slotIds[2] != booking.slotIds[0]
+          && booking.slotIds[2] != booking.slotIds[1]
+          && slotMatchesBooking(bookingId, booking, booking.slotIds[2])
+        ))
+        && (booking.slotIds.size() < 4 || (
+          booking.slotIds[3] is string
+          && booking.slotIds[3] != booking.slotIds[0]
+          && booking.slotIds[3] != booking.slotIds[1]
+          && booking.slotIds[3] != booking.slotIds[2]
+          && slotMatchesBooking(bookingId, booking, booking.slotIds[3])
+        ));
+    }
+
+    function isSlotLinkedToBooking(bookingId, slotId, slot) {
+      let bookingPath = /databases/$(database)/documents/bookings/$(bookingId);
+      return existsAfter(bookingPath)
+        && slotId in getAfter(bookingPath).data.slotIds
+        && slotDataMatchesBooking(bookingId, getAfter(bookingPath).data, slotId, slot);
+    }
+
+    function slotIsRemoved(slotId) {
+      return !existsAfter(/databases/$(database)/documents/slots/$(slotId));
+    }
+
+    function hasNoSlotLocksAfter(booking) {
+      return !('slotIds' in booking) || (
+        booking.slotIds is list
+        && booking.slotIds.size() <= 4
+        && (booking.slotIds.size() < 1 || slotIsRemoved(booking.slotIds[0]))
+        && (booking.slotIds.size() < 2 || slotIsRemoved(booking.slotIds[1]))
+        && (booking.slotIds.size() < 3 || slotIsRemoved(booking.slotIds[2]))
+        && (booking.slotIds.size() < 4 || slotIsRemoved(booking.slotIds[3]))
+      );
     }
 
     function isValidMaintenance(data) {
@@ -57,16 +182,22 @@ service cloud.firestore {
     // (ห้อง+วัน+เวลา สร้างจากฝั่ง client เสมอ) จึงเช็คแค่รูปแบบและชนิดข้อมูลพื้นฐาน
     function isValidSlot(data) {
       return data.bookingId is string && data.bookingId.size() > 0
-        && data.room is string && data.date is string;
+        && data.building is string && data.room is string && data.date is string
+        && data.slotTime is string && data.slotTime.matches('^([01][0-9]|2[0-3])(00|30)$');
     }
 
     match /bookings/{bookingId} {
       allow read: if true;
       // ผู้ใช้ทั่วไปยังจองห้องได้โดยไม่ต้องล็อกอิน (ฟอร์มจองสาธารณะ) แต่ข้อมูลต้องผ่าน isValidBooking
-      allow create: if isValidId(bookingId) && isValidBooking(incoming());
+      allow create: if isValidId(bookingId)
+        && isValidBooking(incoming())
+        && hasBookingSlotLocks(bookingId, incoming());
       // แก้ไข/ลบข้อมูลการจอง (รวมถึงการยกเลิกจากหน้า admin หรือปุ่มลบในตาราง) ต้องเป็นแอดมินเท่านั้น
-      allow update: if isAdmin() && isValidId(bookingId) && isValidBooking(incoming());
-      allow delete: if isAdmin() && isValidId(bookingId);
+      allow update: if isAdmin()
+        && isValidId(bookingId)
+        && isValidBooking(incoming())
+        && hasBookingSlotLocks(bookingId, incoming());
+      allow delete: if isAdmin() && isValidId(bookingId) && hasNoSlotLocksAfter(resource.data);
     }
 
     match /maintenance/{maintenanceId} {
@@ -83,16 +214,15 @@ service cloud.firestore {
       allow delete: if isAdmin() && isValidId(serviceHourId);
     }
 
-    // Slot lock ต่อช่วงเวลา 30 นาที — กลไกกันจองซ้อนจริง
-    // "allow create" ใช้ได้เฉพาะตอนที่เอกสารนั้นยังไม่มีอยู่เท่านั้น (นิยามของ Firestore Rules)
-    // ส่วน "allow update: if false" ทำให้เอกสารที่มีอยู่แล้วแก้ไข/เขียนทับไม่ได้เด็ดขาด
-    // ผลคือ: ใครก็ตามที่พยายามจองช่วงเวลาที่มีคนล็อกไปแล้ว จะถูก Firestore ปฏิเสธเสมอ
-    // ไม่ว่าจะจงใจข้าม transaction ในแอปหรือยิง request ตรงก็ตาม
+    // Slot locks must be created atomically with the booking they reference.
     match /slots/{slotId} {
       allow read: if true;
-      allow create: if isValidId(slotId) && isValidSlot(incoming());
+      allow create: if isValidSlotId(slotId)
+        && isValidSlot(incoming())
+        && isSlotLinkedToBooking(incoming().bookingId, slotId, incoming());
       allow update: if false;
-      allow delete: if isAdmin();
+      allow delete: if isAdmin()
+        && !existsAfter(/databases/$(database)/documents/bookings/$(resource.data.bookingId));
     }
 
     // Admin allowlists are managed in the Firebase Console only. For Google sign-in,

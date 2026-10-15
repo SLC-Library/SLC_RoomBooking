@@ -49,65 +49,32 @@ service cloud.firestore {
         building == 'Saint Benedict' && room == 'Multi-purpose Room' ? 'Saint-Benedict-qbhdov__Multi-purpose-Room-1y3yrjl' : '';
     }
 
-    function timeToMinutes(time) {
-      let minutesByTime = {
-        '00:00': 0, '00:30': 30, '01:00': 60, '01:30': 90,
-        '02:00': 120, '02:30': 150, '03:00': 180, '03:30': 210,
-        '04:00': 240, '04:30': 270, '05:00': 300, '05:30': 330,
-        '06:00': 360, '06:30': 390, '07:00': 420, '07:30': 450,
-        '08:00': 480, '08:30': 510, '09:00': 540, '09:30': 570,
-        '10:00': 600, '10:30': 630, '11:00': 660, '11:30': 690,
-        '12:00': 720, '12:30': 750, '13:00': 780, '13:30': 810,
-        '14:00': 840, '14:30': 870, '15:00': 900, '15:30': 930,
-        '16:00': 960, '16:30': 990, '17:00': 1020, '17:30': 1050,
-        '18:00': 1080, '18:30': 1110, '19:00': 1140, '19:30': 1170,
-        '20:00': 1200, '20:30': 1230, '21:00': 1260, '21:30': 1290,
-        '22:00': 1320, '22:30': 1350, '23:00': 1380, '23:30': 1410
+    function hourToMinutes(hour) {
+      let minutesByHour = {
+        '00': 0, '01': 60, '02': 120, '03': 180,
+        '04': 240, '05': 300, '06': 360, '07': 420,
+        '08': 480, '09': 540, '10': 600, '11': 660,
+        '12': 720, '13': 780, '14': 840, '15': 900,
+        '16': 960, '17': 1020, '18': 1080, '19': 1140,
+        '20': 1200, '21': 1260, '22': 1320, '23': 1380
       };
-      return minutesByTime.keys().hasAny([time]) ? minutesByTime[time] : -1;
+      return minutesByHour.keys().hasAny([hour]) ? minutesByHour[hour] : -1;
     }
 
-    function slotTimeToMinutes(time) {
-      let minutesBySlotTime = {
-        '0000': 0, '0030': 30, '0100': 60, '0130': 90,
-        '0200': 120, '0230': 150, '0300': 180, '0330': 210,
-        '0400': 240, '0430': 270, '0500': 300, '0530': 330,
-        '0600': 360, '0630': 390, '0700': 420, '0730': 450,
-        '0800': 480, '0830': 510, '0900': 540, '0930': 570,
-        '1000': 600, '1030': 630, '1100': 660, '1130': 690,
-        '1200': 720, '1230': 750, '1300': 780, '1330': 810,
-        '1400': 840, '1430': 870, '1500': 900, '1530': 930,
-        '1600': 960, '1630': 990, '1700': 1020, '1730': 1050,
-        '1800': 1080, '1830': 1110, '1900': 1140, '1930': 1170,
-        '2000': 1200, '2030': 1230, '2100': 1260, '2130': 1290,
-        '2200': 1320, '2230': 1350, '2300': 1380, '2330': 1410
-      };
-      return minutesBySlotTime.keys().hasAny([time]) ? minutesBySlotTime[time] : -1;
+    function timeToMinutes(time) {
+      let parts = time.split(':');
+      let hourMinutes = hourToMinutes(parts[0]);
+      return hourMinutes < 0 ? -1 : hourMinutes + (parts[1] == '30' ? 30 : 0);
     }
 
     function isValidSlotId(slotId) {
       return slotId is string && slotId.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
-    function slotDataMatchesBooking(bookingId, booking, slotId, slot) {
-      let startMinutes = timeToMinutes(booking.startTime);
-      let slotMinutes = slotTimeToMinutes(slot.slotTime);
-      return slot.bookingId == bookingId
-        && slot.building == booking.building
-        && slot.room == booking.room
-        && slot.date == booking.date
-        && slot.slotTime is string
-        && slot.slotTime.matches('^([01][0-9]|2[0-3])(00|30)$')
-        && slotMinutes >= startMinutes
-        && slotMinutes < timeToMinutes(booking.endTime)
-        && (slotMinutes - startMinutes) % 30 == 0
-        && slotId == slotPrefix(booking.building, booking.room) + '__' + booking.date + '__' + slot.slotTime;
-    }
-
     function slotMatchesBooking(bookingId, booking, slotId) {
       let slotPath = /databases/$(database)/documents/slots/$(slotId);
       return existsAfter(slotPath)
-        && slotDataMatchesBooking(bookingId, booking, slotId, getAfter(slotPath).data);
+        && getAfter(slotPath).data.bookingId == bookingId;
     }
 
     function hasBookingSlotLocks(bookingId, booking) {
@@ -137,11 +104,22 @@ service cloud.firestore {
         ));
     }
 
+    function slotLinksToBooking(bookingId, slotId, slot, booking) {
+      let slotTime = slot.slotTime.replace('00$', ':00').replace('30$', ':30');
+      return booking.slotIds is list
+        && slotId in booking.slotIds
+        && booking.building == slot.building
+        && booking.room == slot.room
+        && booking.date == slot.date
+        && booking.startTime <= slotTime
+        && booking.endTime > slotTime
+        && slotId == slotPrefix(booking.building, booking.room) + '__' + booking.date + '__' + slot.slotTime;
+    }
+
     function isSlotLinkedToBooking(bookingId, slotId, slot) {
       let bookingPath = /databases/$(database)/documents/bookings/$(bookingId);
       return existsAfter(bookingPath)
-        && slotId in getAfter(bookingPath).data.slotIds
-        && slotDataMatchesBooking(bookingId, getAfter(bookingPath).data, slotId, slot);
+        && slotLinksToBooking(bookingId, slotId, slot, getAfter(bookingPath).data);
     }
 
     function slotIsRemoved(slotId) {
@@ -188,7 +166,7 @@ service cloud.firestore {
 
     match /bookings/{bookingId} {
       allow read: if true;
-      // ผู้ใช้ทั่วไปยังจองห้องได้โดยไม่ต้องล็อกอิน (ฟอร์มจองสาธารณะ) แต่ข้อมูลต้องผ่าน isValidBooking
+      // Public booking creation is allowed only with matching slot locks in the same transaction.
       allow create: if isValidId(bookingId)
         && isValidBooking(incoming())
         && hasBookingSlotLocks(bookingId, incoming());

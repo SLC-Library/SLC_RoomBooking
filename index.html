@@ -1025,10 +1025,6 @@
 
                             <div class="flex flex-wrap items-center gap-2">
                                 <input type="text" id="adminBookingSearch" oninput="filterAdminBookings()" placeholder="ค้นหาชื่อผู้จอง, ห้อง, อาคาร..." class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 w-48 sm:w-60">
-                                <button onclick="importLegacyBookings()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer" title="นำเข้าข้อมูลการจองเก่าจาก Google Sheet (ทำครั้งเดียว)">
-                                    <i class="fa-solid fa-file-import"></i>
-                                    <span>นำเข้าข้อมูลเก่า</span>
-                                </button>
                                 <button onclick="promptAdminExportExcel()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer" title="ส่งออกตารางการจองเป็นไฟล์ Excel">
                                     <i class="fa-solid fa-file-excel"></i>
                                     <span>ส่งออก Excel</span>
@@ -1232,56 +1228,47 @@
             return ids;
         }
 
+        async function createBookingLocked(payload) {
+            const slotIds = computeSlotIds(payload.building, payload.room, payload.date, payload.startTime, payload.endTime);
+            if (slotIds.length === 0) {
+                throw new Error('INVALID_TIME_RANGE');
+            }
+            const bookingRef = doc(collection(db, "bookings"));
+
+            try {
+                await runTransaction(db, async (tx) => {
+                    for (const slotId of slotIds) {
+                        const slotSnap = await tx.get(doc(db, "slots", slotId));
+                        if (slotSnap.exists()) {
+                            throw new Error('SLOT_TAKEN');
+                        }
+                    }
+
+                    const nowIso = new Date().toISOString();
+                    slotIds.forEach((slotId) => {
+                        tx.set(doc(db, "slots", slotId), {
+                            bookingId: bookingRef.id,
+                            building: payload.building,
+                            room: payload.room,
+                            date: payload.date,
+                            createdAt: nowIso
+                        });
+                    });
+                    tx.set(bookingRef, { ...payload, slotIds, createdAt: payload.createdAt || nowIso });
+                });
+                return { success: true, id: bookingRef.id };
+            } catch (err) {
+                if (err && err.message === 'SLOT_TAKEN') throw err;
+                handleFirestoreError(err, 'create', 'bookings(locked)');
+            }
+        }
+
         window.firestoreOps = {
             db,
             startListeningBookings,
-            addBooking: async (payload) => {
-                try {
-                    const docRef = await addDoc(collection(db, "bookings"), {
-                        ...payload,
-                        createdAt: new Date().toISOString()
-                    });
-                    return { success: true, id: docRef.id };
-                } catch (err) {
-                    handleFirestoreError(err, 'create', 'bookings');
-                }
-            },
             // สร้างการจองแบบมีการล็อกช่วงเวลาจริง (atomic transaction) เพื่อกันการจองซ้อนกัน
-            // ใช้แทน addBooking() สำหรับการจองจากฟอร์มปกติ — ถ้าช่วงเวลาถูกจองไปแล้วจะ throw Error('SLOT_TAKEN')
-            createBookingLocked: async (payload) => {
-                const slotIds = computeSlotIds(payload.building, payload.room, payload.date, payload.startTime, payload.endTime);
-                if (slotIds.length === 0) {
-                    throw new Error('INVALID_TIME_RANGE');
-                }
-                const bookingRef = doc(collection(db, "bookings"));
-                try {
-                    await runTransaction(db, async (tx) => {
-                        // 1) ต้องอ่าน (get) ทุก slot ก่อน แล้วค่อย set ทั้งหมด (ข้อกำหนดของ Firestore transaction)
-                        for (const slotId of slotIds) {
-                            const slotSnap = await tx.get(doc(db, "slots", slotId));
-                            if (slotSnap.exists()) {
-                                throw new Error('SLOT_TAKEN');
-                            }
-                        }
-                        // 2) ล็อกทุกช่วงเวลา + สร้างรายการจอง ในธุรกรรมเดียวกัน (all-or-nothing)
-                        const nowIso = new Date().toISOString();
-                        slotIds.forEach((slotId) => {
-                            tx.set(doc(db, "slots", slotId), {
-                                bookingId: bookingRef.id,
-                                building: payload.building,
-                                room: payload.room,
-                                date: payload.date,
-                                createdAt: nowIso
-                            });
-                        });
-                        tx.set(bookingRef, { ...payload, slotIds, createdAt: nowIso });
-                    });
-                    return { success: true, id: bookingRef.id };
-                } catch (err) {
-                    if (err && err.message === 'SLOT_TAKEN') throw err;
-                    handleFirestoreError(err, 'create', 'bookings(locked)');
-                }
-            },
+            // ถ้าช่วงเวลาถูกจองไปแล้วจะ throw Error('SLOT_TAKEN')
+            createBookingLocked: (payload) => createBookingLocked(payload),
             deleteBooking: async (id) => {
                 try {
                     // อ่านรายการจองก่อนลบ เพื่อปลดล็อก slot ที่ผูกไว้ (ถ้ามี) พร้อมกันในธุรกรรมเดียว
@@ -1312,19 +1299,6 @@
                     return list;
                 } catch (err) {
                     handleFirestoreError(err, 'get', 'bookings');
-                }
-            },
-            saveBatchBookings: async (bookingsList) => {
-                try {
-                    for (const b of bookingsList) {
-                        const { id, ...data } = b;
-                        await addDoc(collection(db, "bookings"), {
-                            ...data,
-                            createdAt: data.createdAt || new Date().toISOString()
-                        });
-                    }
-                } catch (err) {
-                    handleFirestoreError(err, 'create', 'bookings');
                 }
             },
             // Maintenance and closures
@@ -1805,11 +1779,6 @@
             document.getElementById('sidebar').classList.toggle('collapsed');
         }
 
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyd9X7XARy59DpVcpFRQEykCP7XLPGC-_UIQXd_BrHuaLHsEHvlDnH5OBCzdErZHPEJWQ/exec";
-        // Firestore คือฐานข้อมูลหลักแล้ว ไม่ต้องเขียนข้อมูลใหม่ทุกครั้งกลับไปที่ Google Sheet อีกต่อไป
-        // (SCRIPT_URL ยังใช้สำหรับ "นำเข้าข้อมูลเก่า" ครั้งเดียวในหน้า Admin และเป็น fallback อ่านข้อมูลกรณี Firestore ล่ม)
-        // ถ้าต้องการกลับไปซิงก์ข้อมูลใหม่ทุกครั้งไป Google Sheet ด้วย ให้เปลี่ยนเป็น true
-        const SYNC_TO_LEGACY_SHEET = false;
         const rooms = {
             "Saint Louis": [
                 "Conference Room 1",
@@ -1840,6 +1809,7 @@
         }
 
         let allBookings = []; 
+        let bookingSubmissionInProgress = false;
         let fpBookingInstance, fpFilterInstance, fpDashboardInstance;
         let maintenanceSlots = [];
         let operatingHoursOverrides = [];
@@ -2539,32 +2509,13 @@
                         allBookings = data;
                     }
                 } catch (err) {
-                    console.warn('Firestore load bookings fallback:', err);
+                    console.warn('Firestore load bookings failed:', err);
                 }
                 renderBookingTable();
                 return;
             }
-
-            const tbody = document.getElementById("bookingTableBody");
-            if (tbody && allBookings.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" class="text-center text-slate-400 py-8"><i class="fa-solid fa-spinner fa-spin me-2 text-blue-500"></i>กำลังโหลดข้อมูล...</td></tr>`;
-            }
-            if (SCRIPT_URL) {
-                fetch(SCRIPT_URL)
-                    .then(res => res.ok ? res.json() : null)
-                    .then(data => {
-                        if (data) {
-                            allBookings = Array.isArray(data.bookings) ? data.bookings : (Array.isArray(data) ? data : []);
-                        }
-                        renderBookingTable();
-                    })
-                    .catch(err => {
-                        console.warn('External script load note:', err.message || err);
-                        renderBookingTable();
-                    });
-            } else {
-                renderBookingTable();
-            }
+            console.error('Firestore is not ready; bookings cannot be loaded.');
+            renderBookingTable();
         }
 
         function updateFilterRooms() {
@@ -2620,33 +2571,15 @@
 
         async function refreshBookingsData() {
             const ops = await waitForFirestoreOps();
-            if (ops) {
-                try {
-                    const data = await ops.getAllBookings();
-                    if (Array.isArray(data)) {
-                        allBookings = data;
-                    }
-                } catch (err) {
-                    console.warn('Firestore refresh bookings note:', err);
-                }
-                return;
-            }
-            if (!SCRIPT_URL) return;
-            return fetch(SCRIPT_URL)
-                .then(res => res.ok ? res.json() : null)
-                .then(data => {
-                    if (data) {
-                        allBookings = Array.isArray(data.bookings) ? data.bookings : (Array.isArray(data) ? data : []);
-                    }
-                })
-                .catch(err => {
-                    console.warn('Refresh bookings script note:', err.message || err);
-                });
+            if (!ops) throw new Error('Firestore not ready');
+            const data = await ops.getAllBookings();
+            if (Array.isArray(data)) allBookings = data;
         }
 
         document.getElementById("bookingForm").addEventListener("submit", async function(e) {
             e.preventDefault();
 
+            if (bookingSubmissionInProgress) return;
             if (!validateBookingForm()) return;
 
             const bookingDateValue = fpBookingInstance ? fpBookingInstance.input.value : "";
@@ -2695,6 +2628,10 @@
                 return;
             }
 
+            bookingSubmissionInProgress = true;
+            document.getElementById("submitBtn").disabled = true;
+            document.getElementById("submitBtn").innerHTML = "<i class='fa-solid fa-spinner fa-spin me-2'></i>กำลังบันทึกข้อมูล...";
+
             try {
                 await refreshBookingsData();
 
@@ -2707,9 +2644,6 @@
                     });
                     return;
                 }
-
-                document.getElementById("submitBtn").disabled = true;
-                document.getElementById("submitBtn").innerHTML = "<i class='fa-solid fa-spinner fa-spin me-2'></i>กำลังบันทึกข้อมูล...";
 
                 let deptValue = "";
                 if (statusValue === "บุคลากร") {
@@ -2767,13 +2701,6 @@
                     try {
                         await ops.createBookingLocked(payload);
                         handleBookingSuccess();
-                        if (SYNC_TO_LEGACY_SHEET && SCRIPT_URL) {
-                            fetch(SCRIPT_URL, {
-                                method: "POST",
-                                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                                body: JSON.stringify(payload)
-                            }).catch(e => console.warn('Background sync note:', e));
-                        }
                     } catch (err) {
                         if (err && err.message === 'SLOT_TAKEN') {
                             console.warn('Booking slot conflict detected at write-time');
@@ -2796,46 +2723,11 @@
                                 confirmButtonColor: '#e11d48'
                             }, 'surprised');
                         }
-                    } finally {
-                        document.getElementById("submitBtn").innerHTML = "<i class='fa-solid fa-paper-plane me-2'></i>ส่งข้อมูลการจอง";
-                        checkFormCompletion();
                     }
                     return;
                 }
 
-                // Fallback กรณีไม่มี Firestore
-                if (SCRIPT_URL) {
-                    try {
-                        const res = await fetch(SCRIPT_URL, {
-                            method: "POST",
-                            headers: { "Content-Type": "text/plain;charset=utf-8" },
-                            body: JSON.stringify(payload)
-                        });
-                        const result = await res.json();
-                        if (result.status === "error") {
-                            showMascotAlert({
-                                title: 'ไม่สามารถจองได้',
-                                text: result.message,
-                                icon: 'warning',
-                                confirmButtonColor: '#1d4ed8'
-                            }, 'surprised');
-                        } else {
-                            handleBookingSuccess();
-                        }
-                    } catch (err) {
-                        console.error(err);
-                        showMascotAlert({
-                            title: 'เกิดข้อผิดพลาด!',
-                            text: 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้ง',
-                            icon: 'error',
-                            confirmButtonText: 'รับทราบ',
-                            confirmButtonColor: '#e11d48'
-                        }, 'surprised');
-                    } finally {
-                        document.getElementById("submitBtn").innerHTML = "<i class='fa-solid fa-paper-plane me-2'></i>ส่งข้อมูลการจอง";
-                        checkFormCompletion();
-                    }
-                }
+                throw new Error('Firestore not ready');
             } catch (err) {
                 console.error('Failed to refresh bookings before submit:', err);
                 showMascotAlert({
@@ -2845,6 +2737,9 @@
                     confirmButtonText: 'รับทราบ',
                     confirmButtonColor: '#e11d48'
                 }, 'surprised');
+            } finally {
+                bookingSubmissionInProgress = false;
+                document.getElementById("submitBtn").innerHTML = "<i class='fa-solid fa-paper-plane me-2'></i>ส่งข้อมูลการจอง";
                 checkFormCompletion();
             }
         });
@@ -3015,35 +2910,6 @@
             }
             checkFormCompletion();
 
-            // 2. ดึงข้อมูลเสริม (maintenance/hours) จาก Apps Script แบบ Non-blocking
-            // จะไม่ขึ้น Error หาก URL เก่า 404 หรือออฟไลน์
-            if (SCRIPT_URL) {
-                fetch(`${SCRIPT_URL}?type=all`)
-                    .then(res => res.ok ? res.json() : null)
-                    .then(data => {
-                        if (!data) return;
-                        if (Array.isArray(data.maintenance)) {
-                            maintenanceSlots = data.maintenance;
-                            showUpcomingClosuresPopup();
-                        }
-                        if (Array.isArray(data.hours) && !window.__firestoreServiceHoursReady) {
-                            operatingHoursOverrides = data.hours;
-                        }
-                        // หาก Firestore ยังไม่มีข้อมูลเลย และใน Sheet เก่ามี ให้นำเข้าอัตโนมัติ
-                        if (allBookings.length === 0 && Array.isArray(data.bookings) && data.bookings.length > 0) {
-                            allBookings = data.bookings;
-                            renderBookingTable();
-                            if (window.firestoreOps) {
-                                data.bookings.slice(0, 50).forEach(b => {
-                                    window.firestoreOps.addBooking(b).catch(() => {});
-                                });
-                            }
-                        }
-                    })
-                    .catch(err => {
-                        console.warn('External script optional sync skipped:', err.message || err);
-                    });
-            }
         }
 
         function showUpcomingClosuresPopup() {
@@ -3415,23 +3281,7 @@
                 console.warn('Firestore refresh error:', err);
             }
 
-            if (SCRIPT_URL) {
-                fetch(`${SCRIPT_URL}?type=all`)
-                    .then(res => res.ok ? res.json() : null)
-                    .then(data => {
-                        if (data) {
-                            if (Array.isArray(data.bookings)) allBookings = data.bookings;
-                            if (Array.isArray(data.maintenance)) maintenanceSlots = data.maintenance;
-                        }
-                        onDone();
-                    })
-                    .catch(err => {
-                        console.warn('Dashboard script sync skipped:', err.message || err);
-                        onDone();
-                    });
-            } else {
-                onDone();
-            }
+            onDone();
         }
 
         function renderDashboard() {
@@ -3880,126 +3730,6 @@
 
             if (refreshBtn) {
                 refreshBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i><span>รีเฟรชข้อมูล</span>';
-            }
-        }
-
-        // นำเข้าข้อมูลการจองเก่าจาก Google Sheet (ระบบเดิมก่อนย้ายมาใช้ Firestore)
-        // ออกแบบให้เรียกซ้ำได้อย่างปลอดภัย: จะข้ามรายการที่มีอยู่ใน Firestore แล้ว (เทียบ ห้อง/วันที่/เวลาเริ่ม/ผู้จอง)
-        function getLegacyRequesterName(booking) {
-            return booking.requester || booking.Requester || booking.booker || booking.Booker ||
-                booking.name || booking['ชื่อผู้จอง'] || 'ไม่ระบุ';
-        }
-
-        function getLegacyBookingKey(booking) {
-            const room = booking.room || booking.Room || '';
-            const date = (booking.date || booking.Date || '').split('T')[0];
-            const startTime = booking.startTime || booking.StartTime || '';
-            if (!room || !date || !startTime) return '';
-
-            return [room, date, startTime, getLegacyRequesterName(booking)]
-                .map(value => String(value).trim().toLocaleLowerCase())
-                .join('|');
-        }
-
-        async function importLegacyBookings() {
-            const ok = await ensureAdminAuth();
-            if (!ok) return;
-            if (!SCRIPT_URL) {
-                BrandSwal.fire({ icon: 'info', title: 'ไม่มีข้อมูลเก่าให้นำเข้า', text: 'ไม่พบ Google Sheet เดิมที่เชื่อมไว้' });
-                return;
-            }
-
-            BrandSwal.fire({ title: 'กำลังตรวจสอบข้อมูลเก่า...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
-
-            let legacyBookings = [];
-            try {
-                const res = await fetch(SCRIPT_URL);
-                const data = await res.json();
-                legacyBookings = Array.isArray(data?.bookings) ? data.bookings : (Array.isArray(data) ? data : []);
-            } catch (err) {
-                Swal.close();
-                BrandSwal.fire({ icon: 'error', title: 'ดึงข้อมูลเก่าไม่สำเร็จ', text: err.message || 'ไม่สามารถเชื่อมต่อ Google Sheet ได้' });
-                return;
-            }
-
-            const ops = await waitForFirestoreOps();
-            let currentBookings = allBookings;
-            try {
-                if (ops) currentBookings = await ops.getAllBookings();
-            } catch (e) { /* ใช้ allBookings เดิมถ้าดึงใหม่ไม่สำเร็จ */ }
-
-            const existingKeys = new Set(
-                (currentBookings || []).map(getLegacyBookingKey).filter(Boolean)
-            );
-
-            const toImport = legacyBookings.filter(b => {
-                const key = getLegacyBookingKey(b);
-                if (!key || existingKeys.has(key)) return false;
-
-                // เพิ่ม key ทันทีเพื่อกันรายการซ้ำภายในข้อมูล legacy ชุดเดียวกัน
-                existingKeys.add(key);
-                return true;
-            }).map(b => {
-                const reqName = getLegacyRequesterName(b);
-                const reqStatus = b.userStatus || b.UserStatus || b.status || b['สถานะผู้ใช้'] || '';
-                const reqDept = b.department || b.Department || b.faculty || b['คณะ/หน่วยงาน'] || '';
-                const reqPurpose = b.purpose || b.Purpose || b.reason || b['วัตถุประสงค์'] || '';
-
-                return {
-                    room: b.room || b.Room || '',
-                    building: b.building || b.Building || '',
-                    date: b.date || b.Date || '',
-                    startTime: b.startTime || b.StartTime || '',
-                    endTime: b.endTime || b.EndTime || b.startTime || b.StartTime || '',
-
-                    // บันทึกซ้ำทั้ง 2 แบบ (ทั้งชื่อสั้นและชื่อเต็ม) เพื่อรองรับทุกฟังก์ชันใน UI
-                    requester: reqName,
-                    name: reqName,
-
-                    userStatus: reqStatus,
-                    status: reqStatus,
-
-                    department: reqDept,
-                    faculty: reqDept,
-
-                    purpose: reqPurpose,
-                    reason: reqPurpose,
-
-                    attendees: b.attendees || b.Attendees || b['จำนวนผู้ใช้งาน'] || '',
-                    createdAt: b.createdAt || b.Timestamp || new Date().toISOString()
-                };
-            });
-
-            Swal.close();
-
-            if (toImport.length === 0) {
-                BrandSwal.fire({ icon: 'info', title: 'ไม่มีข้อมูลใหม่', text: 'ข้อมูลจาก Google Sheet มีอยู่ใน Firestore ครบแล้ว' });
-                return;
-            }
-
-            const confirmResult = await BrandSwal.fire({
-                title: 'ยืนยันการนำเข้าข้อมูลเก่า',
-                html: `พบข้อมูลการจองเก่าที่ยังไม่มีในระบบ <b>${toImport.length}</b> รายการ<br>ต้องการนำเข้าข้อมูลเหล่านี้เข้า Firestore หรือไม่?`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'นำเข้าข้อมูล',
-                cancelButtonText: 'ยกเลิก',
-                confirmButtonColor: '#01224D'
-            });
-            if (!confirmResult.isConfirmed) return;
-
-            try {
-                if (!ops) throw new Error('Firestore not ready');
-                await ops.saveBatchBookings(toImport);
-                BrandSwal.fire({
-                    icon: 'success',
-                    title: 'นำเข้าข้อมูลสำเร็จ',
-                    text: `นำเข้าแล้ว ${toImport.length} รายการ`,
-                    confirmButtonColor: '#1d4ed8'
-                });
-                await refreshAdminData();
-            } catch (err) {
-                BrandSwal.fire({ icon: 'error', title: 'นำเข้าข้อมูลไม่สำเร็จ', text: err.message || String(err) });
             }
         }
 

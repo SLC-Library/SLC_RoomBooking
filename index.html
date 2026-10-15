@@ -1082,15 +1082,16 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
         import { 
             getFirestore, collection, addDoc, getDocs, doc, deleteDoc, 
-            onSnapshot, getDocFromServer, getDoc, runTransaction
+            onSnapshot, getDocFromServer, getDoc, runTransaction, connectFirestoreEmulator
         } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
         import {
             getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut,
-            setPersistence, browserSessionPersistence
+            setPersistence, browserSessionPersistence, connectAuthEmulator
         } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 
+        const useFirebaseEmulators = ["localhost", "127.0.0.1"].includes(location.hostname);
         const firebaseConfig = {
-            projectId: "gen-lang-client-0131819608",
+            projectId: useFirebaseEmulators ? "demo-roombooking" : "gen-lang-client-0131819608",
             appId: "1:597275977127:web:20cb04afa5c3cec29f4282",
             apiKey: "AIzaSyAbdH53i3QFAo-FaLeR9XcngncMF2dLJm8",
             authDomain: "gen-lang-client-0131819608.firebaseapp.com",
@@ -1101,6 +1102,9 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+        if (useFirebaseEmulators) {
+            connectFirestoreEmulator(db, "127.0.0.1", 8080);
+        }
         const approvedAdminEmails = new Set([
             "library@slc.ac.th",
             "akira@slc.ac.th"
@@ -1109,6 +1113,9 @@
         // --- Admin authentication (Firebase Auth) ---
         // Admin access is allowlisted by UID, approved email, or verified email in "adminEmails".
         const auth = getAuth(app);
+        if (useFirebaseEmulators) {
+            connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
+        }
         setPersistence(auth, browserSessionPersistence).catch((e) => {
             console.warn("Auth persistence setup warning:", e);
         });
